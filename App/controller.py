@@ -51,12 +51,12 @@ def init():
 #  de datos en los modelos
 # ___________________________________________________
 
-def loadData(analyzer, accidentsfile):
+def loadData(catalog, accidentsfile):
     """
     Carga los datos de los archivos CSV en el modelo
     """
     
-    return analyzer
+    return catalog
 
 # ___________________________________________________
 #  Funciones para consultas

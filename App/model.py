@@ -38,6 +38,30 @@ es decir contiene los modelos con los datos en memoria
 # API del TAD Catalogo de accidentes
 # -----------------------------------------------------
 
+def newCatalog():
+    """ Inicializa el catálogo
+
+
+
+    Retorna el catálogo inicializado.
+    """
+    catalog = {'years': None,
+                'dateIndex': None
+                }
+
+    catalog['years'] = lt.newList('SINGLE_LINKED', )
+    catalog['2016'] = om.newMap(omaptype='BST',
+                                      comparefunction=compareDates)
+    catalog['2016'] = om.newMap(omaptype='BST',
+                                      comparefunction=compareDates)
+    catalog['2017'] = om.newMap(omaptype='BST',
+                                      comparefunction=compareDates)
+    catalog['2018'] = om.newMap(omaptype='BST',
+                                      comparefunction=compareDates)
+    catalog['2019'] = om.newMap(omaptype='BST',
+                                      comparefunction=compareDates)
+    return catalog
+
 
 # Funciones para agregar informacion al catalogo
 
@@ -47,6 +71,36 @@ es decir contiene los modelos con los datos en memoria
 # ==============================
 
 
+
+
+
+
+
+
+
+
+
+
+def yearSize(catalog,year):
+    """
+    RETO3 - REQ1
+    Número de accidentes de un año dado
+    """    
+    return om.size(catalog[year])
+
 # ==============================
 # Funciones de Comparacion
 # ==============================
+
+def compareDates(Date1,Date2):
+    """
+    RETO3 - REQ1
+    Compara dos fechas de accidentes en un 
+    año dado.
+    """
+    if (date1 == date2):
+        return 0
+    elif (date1 > date2):
+        return 1
+    else:
+        return -1

@@ -22,7 +22,11 @@
 
 import sys
 import config
+import datetime
 from DISClib.ADT import list as lt
+from DISClib.DataStructures import listiterator as it
+from DISClib.ADT import map as m
+from DISClib.DataStructures import mapentry as me
 from App import controller
 assert config
 
@@ -53,27 +57,33 @@ def printData(cont):
     RETO3 - REQ1
     Imprime la información del catálogo.
     """ 
-    print('Accidentes cargados: ' + controller.si)
-    print('Promedio votación películas: ' + str(producer['average_rating']))
-    print('Total de películas: ' + str(lt.size(producer['movies'])))
+    print('Accidentes cargados: ' + str(controller.accidentsSize(cont)))
+    print('Fechas en las que ocurrieron accidentes cargadas: ' + str(controller.yearsSize(cont)))
 
-        
-
-def dfgsdfsdfsgs():
+def printAccidentsByDate(accidents_by_date,search_date):
     """
     RETO3 - REQ1
-    Imprime la información del catálogo.
+    Imprime los accidentes dada una fecha
     """
-    if producer:
-        print('Productora encontrada: ' + producer['name'])
-        print('Promedio votación películas: ' + str(producer['average_rating']))
-        print('Total de películas: ' + str(lt.size(producer['movies'])))
-        iterator = it.newIterator(producer['movies'])
-        while it.hasNext(iterator):
-            movie = it.next(iterator)
-            print('Titulo: ' + movie['title'] + '  Avg. Rating: ' + movie['vote_average'])
+    if accidents_by_date:
+        print('En el día: ' + search_date)
+        print('Ocurrieron un total de: ' + str((m.size(accidents_by_date['Accidents_lst']))) + " accidentes.")
+
+        Map_Severity = accidents_by_date['Severities_mp']['table']['elements']
+        for severity in Map_Severity:
+            severity_lvl = me.getValue(severity)
+
+            if severity_lvl is not None:
+                iterator = it.newIterator(severity_lvl['ListBySeverity'])
+
+                print('\nAccidentes con Nivel de Gravedad: ' + str(severity_lvl['Severity']))
+                while it.hasNext(iterator):
+                    acc = it.next(iterator)
+                    date_time = datetime.datetime.strptime(acc['Start_Time'], '%Y-%m-%d %H:%M:%S')
+                    print('ID: ' +  str(acc['ID']) +  '  Datos Fecha: '+ str(date_time.ctime()) + '    '+ str(acc['Description']))
+    
     else:
-        print('No se encontró la productora.')
+        print('No se encontraron accidentes en la fecha ingresada o la fecha ingresada no se encuentra entre los años 2016-2019.')
 
 # ___________________________________________________
 #  Menu principal
@@ -86,8 +96,13 @@ def printMenu():
     print("Bienvenido")
     print("1- Inicializar Analizador")
     print("2- Cargar información de accidentes")
-    print("3- Requerimento : Conocer los accidentes en una fecha.")
-    print("4- Requerimento 2: Conocer los accidentes anteriores a una fecha.")
+    print("3- Requerimento 1: Conocer los accidentes en una fecha.")
+#    print("4- Requerimento 2: Conocer los accidentes anteriores a una fecha.")
+#    print("5- Requerimento 3: Conocer los accidentes en un rango de fechas.")
+#    print("6- Requerimento 4: Conocer el Estado con más accidentes.")
+#    print("7- Requerimento 5: Conocer los accidentes por rango de horas.")
+#    print("8- Requerimento 6: Conocer la zona geográfica más accidentada.")
+#    print("9- Requerimento 7: ")
     print("0- Salir")
     print("*******************************************")
 
@@ -110,11 +125,23 @@ while True:
         printData(cont)
 
     elif int(inputs[0]) == 3:
-        print("\nBuscando crimenes en un rango de fechas: ")
-
-
-    elif int(inputs[0]) == 4:
         print("\nRequerimiento No 1 del reto 3: ")
+        search_date = input("Ingrese la fecha a buscar (YY-MM-DD):")
+        accidents_by_date = controller.getAccidentsByDate(cont,search_date)
+        printAccidentsByDate(accidents_by_date,search_date)
+
+#    elif int(inputs[0]) == 4:
+#        print("\nRequerimiento No 2 del reto 3: ")
+#    elif int(inputs[0]) == 5:
+#        print("\nRequerimiento No 3 del reto 3: ")
+#    elif int(inputs[0]) == 6:
+#        print("\nRequerimiento No 4 del reto 3: ")
+#    elif int(inputs[0]) == 7:
+#        print("\nRequerimiento No 5 del reto 3: ")
+#    elif int(inputs[0]) == 8:
+#        print("\nRequerimiento No 6 del reto 3: ")
+#    elif int(inputs[0]) == 9:
+#        print("\nRequerimiento No 7 del reto 3: ")
 
     else:
         sys.exit(0)

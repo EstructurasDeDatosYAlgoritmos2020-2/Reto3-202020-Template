@@ -115,7 +115,6 @@ def addSeverityToDateEntry(date_entry,accident):
     accidente y el valor es una lista con los accidentes de dicha severidad
     en la fecha que se está consultando (dada por el nodo del arbol)
     """
-
     lt.addLast(date_entry['Accidents_lst'],accident)
     severity = accident['Severity']
     entry = m.get(date_entry['Severities_mp'], severity)
@@ -124,7 +123,6 @@ def addSeverityToDateEntry(date_entry,accident):
         severity_entry = newSeverityEntry(accident)
         lt.addLast(severity_entry['ListBySeverity'],accident)
         m.put(date_entry['Severities_mp'] , severity, severity_entry)
-    
     else:
         severity_entry = me.getValue(entry)
         lt.addLast(severity_entry['ListBySeverity'],accident)
@@ -142,7 +140,6 @@ def newDateEntry():
                                      maptype='PROBING',
                                      comparefunction=compareSeverity)
     entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
-    
     return entry
 
 def newSeverityEntry(accident):
@@ -155,7 +152,6 @@ def newSeverityEntry(accident):
     severity_entry = {'Severity': None, 'ListBySeverity': None}
     severity_entry['Severity'] = accident['Severity']
     severity_entry['ListBySeverity'] = lt.newList('SINGLE_LINKED', compareSeverity)
-
     return severity_entry
 
 # ==============================
@@ -170,8 +166,6 @@ def getAccidentsByDate(year_bst,search_date):
 
     date_accidents = om.get(year_bst,search_date)
 
-    if date_accidents['key'] is None:
-        return None
     if date_accidents['key'] is not None:
         return me.getValue(date_accidents)
     
@@ -180,7 +174,7 @@ def getAccidentsByDate(year_bst,search_date):
 def yearsSize(catalog):
     """
     RETO3 - REQ1
-    Número de fechas en las que ocurrieron accidentes.
+    Número de fechas en las que ocurrieron accidentes de todos los años.
     """    
     y1=om.size(catalog['2016'])
     y2=om.size(catalog['2017'])
@@ -195,6 +189,30 @@ def accidentsSize(catalog):
     """  
     return lt.size(catalog['accidents'])
 
+def eachYearSize(catalog):
+    """
+    RETO3 - REQ1
+    Número de fechas en las que ocurrieron accidentes de
+    cada año.
+    """    
+    y1=om.size(catalog['2016'])
+    y2=om.size(catalog['2017'])
+    y3=om.size(catalog['2018'])
+    y4=om.size(catalog['2019'])
+
+    return y1 , y2 , y3 , y4
+
+def eachYearHeight(catalog):
+    """
+    RETO3 - REQ1
+    Altura del árbol de cada año.
+    """       
+    y1 = om.height(catalog['2016'])
+    y2 = om.height(catalog['2017'])
+    y3 = om.height(catalog['2018'])
+    y4 = om.height(catalog['2019'])
+
+    return y1, y2, y3, y4
 
 # ==============================
 # Funciones de Comparacion

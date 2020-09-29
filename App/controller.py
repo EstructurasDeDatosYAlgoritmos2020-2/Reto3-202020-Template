@@ -73,9 +73,9 @@ def getAccidentsByDate(catalog,search_date):
     """    
     search_date = datetime.datetime.strptime(search_date, '%Y-%m-%d')
     year_search_date = str(search_date.year)
-    
-    if year_search_date != '2016' or year_search_date != '2017' or year_search_date != '2018' or year_search_date != '2019':
-        return None
+
+#    if year_search_date != '2016' or year_search_date != '2017' or year_search_date != '2018' or year_search_date != '2019':
+#        return None
 
     year_bst = catalog[year_search_date]    
     return model.getAccidentsByDate(year_bst,search_date.date())
@@ -85,7 +85,8 @@ def yearsSize(catalog):
     """
     RETO3 - REQ1
     Llama la función en model que retorna
-    el número de fechas en las que ocurrieron accidentes.
+    el número de fechas en las que ocurrieron accidentes en todos
+    los años.
     """    
     return model.yearsSize(catalog)
 
@@ -96,3 +97,18 @@ def accidentsSize(catalog):
     el número de accidentes.
     """    
     return model.accidentsSize(catalog)
+
+def eachYearSize(catalog):
+    """
+    Llama la función en model que retorna
+    el número de fechas en las que ocurrieron accidentes
+    por cada año.
+    """    
+    return model.eachYearSize(catalog)
+
+def eachYearHeight(catalog):
+    """
+    Llama la función en model que retorna
+    la altura del árbol de cada año.
+    """    
+    return model.eachYearHeight(catalog)    

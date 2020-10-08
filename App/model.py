@@ -52,13 +52,13 @@ def newCatalog():
 
     catalog['accidents'] = lt.newList('ARRAY_LIST',compareAccidentsID)
 #    catalog['years'] = lt.newList('SINGLE_LINKED', )
-    catalog['2016'] = om.newMap(omaptype='BST',
+    catalog['2016'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
-    catalog['2017'] = om.newMap(omaptype='BST',
+    catalog['2017'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
-    catalog['2018'] = om.newMap(omaptype='BST',
+    catalog['2018'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
-    catalog['2019'] = om.newMap(omaptype='BST',
+    catalog['2019'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
     return catalog
 

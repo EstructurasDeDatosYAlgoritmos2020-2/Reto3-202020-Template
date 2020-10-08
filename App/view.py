@@ -42,8 +42,8 @@ operación seleccionada.
 # ___________________________________________________
 
 
-accidentsFile = 'Accidents/us_accidents_small.csv'
-#accidentsFile = 'Accidents/US_Accidents_Dec19.csv'
+#accidentsFile = 'Accidents/us_accidents_small.csv'
+accidentsFile = 'Accidents/US_Accidents_Dec19.csv'
 
 
 # ___________________________________________________
@@ -61,16 +61,16 @@ def printData(cont):
     print('Fechas en las que ocurrieron accidentes cargadas: ' + str(controller.yearsSize(cont)))
 
     print('\nAccidentes en 2016: ' + str(controller.eachYearSize(cont)[0]))
-    print('Altura árbol 2016: ' + str(controller.eachYearSize(cont)[0]))
+    print('Altura árbol 2016: ' + str(controller.eachYearHeight(cont)[0]))
 
     print('\nAccidentes en 2017: '+ str(controller.eachYearSize(cont)[1]))
-    print('Altura árbol 2017: ' + str(controller.eachYearSize(cont)[1]))
+    print('Altura árbol 2017: ' + str(controller.eachYearHeight(cont)[1]))
 
     print('\nAccidentes en 2018: '+ str(controller.eachYearSize(cont)[2]))
-    print('Altura árbol 2018: ' + str(controller.eachYearSize(cont)[2]))
+    print('Altura árbol 2018: ' + str(controller.eachYearHeight(cont)[2]))
 
     print('\nAccidentes en 2019: '+ str(controller.eachYearSize(cont)[3]))
-    print('Altura árbol 2019: ' + str(controller.eachYearSize(cont)[3]))
+    print('Altura árbol 2019: ' + str(controller.eachYearHeight(cont)[3]))
 
 def printAccidentsByDate(accidents_by_date,search_date):
     """

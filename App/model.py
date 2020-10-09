@@ -179,8 +179,13 @@ def getAccidentsBeforeDate(year_bst,search_date):
     Retorna el número de accidentes ocurridos anteriores a una fecha.
     """       
     date_accidents = om.get(year_bst,search_date)
+    
     if date_accidents != None:
-        return om.rank(year_bst,date_accidents)
+
+        key_date = date_accidents['key']
+        keylow = om.minKey(year_bst)
+
+        return om.values(year_bst,keylow,key_date)
     return None
 
 

@@ -26,6 +26,7 @@ import datetime
 from DISClib.ADT import list as lt
 from DISClib.DataStructures import listiterator as it
 from DISClib.ADT import map as m
+from DISClib.ADT import orderedmap as om
 from DISClib.DataStructures import mapentry as me
 from App import controller
 assert config
@@ -105,17 +106,35 @@ def printAccidentsByDate(accidents_by_date,search_date):
         print('No se encontraron accidentes en la fecha ingresada o la fecha ingresada no se encuentra entre los años 2016-2019.')
 
 
-def printAccidentsBeforeDare(accidents_before,search):
+def printAccidentsBeforeDare(accidents_before,search,catalog):
     """
     RETO3 - REQ2
     Imprime los accidentes anteriores a una fecha
     """
     if accidents_before is not None:
-        print('Los accidentes ocurridos anteriores al día: ' + search_date)
-        print("retornooooooooooo",accidents_before)
+ 
+        num_acc_before_date = 0
+        more_accidents = 0
+    
+        iterator = it.newIterator(accidents_before)
+        while it.hasNext(iterator):
+            key_acc = it.next(iterator)
+            year_bst = str(key_acc.year)
+            day = om.get(catalog[year_bst],key_acc)
+      
+            num_accidents_in_day =  lt.size(day['value']['Accidents_lst'])
+            num_acc_before_date = num_acc_before_date + num_accidents_in_day
+
+            if num_accidents_in_day > more_accidents:
+                more_accidents = num_accidents_in_day
+                winner_day = day 
+        
+        print('\nAntes de la fecha ocurrieron: ' +  str(num_acc_before_date) + ' accidentes.')
+        print('El día en el que se presentaron más accidentes antes de la fecha ingresada fue: '+ str(winner_day['key']) + '. Con: '+ str(lt.size(winner_day['value']['Accidents_lst'])) + ' accidentes.')
+
 
     else:
-        print('No se encontraron accidentes en la fecha ingresada.')
+        print('La fecha ingresada no es válida.')
 
 
 
@@ -163,15 +182,16 @@ while True:
 
     elif int(inputs[0]) == 3:
         print("\nRequerimiento No 1 del reto 3: ")
-        search_date = input("Ingrese la fecha a buscar (YYYY-MM-DD):")
+        search_date = input("\nIngrese la fecha a buscar (YYYY-MM-DD):")
         accidents_by_date = controller.getAccidentsByDate(cont,search_date)
         printAccidentsByDate(accidents_by_date,search_date)
 
     elif int(inputs[0]) == 4:
         print("\nRequerimiento No 2 del reto 3: ")
-        search_date = input("Ingrese la fecha desde donde se quieren buscar los accidentes anteriores (YYYY-MM-DD):")
+        search_date = input("\nIngrese la fecha desde donde se quieren buscar los accidentes anteriores (YYYY-MM-DD):")
         accidents_before = controller.getAccidentsBeforeDate(cont,search_date)
-        printAccidentsBeforeDare(accidents_before,search_date)
+        printAccidentsBeforeDare(accidents_before,search_date,cont)
+
 #    elif int(inputs[0]) == 5:
 #        print("\nRequerimiento No 3 del reto 3: ")
 #    elif int(inputs[0]) == 6:

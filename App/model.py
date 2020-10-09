@@ -194,18 +194,23 @@ def getAccidentsInRange(catalog,initial_date,final_date):
     Retorna el número de accidentes ocurridos anteriores a una fecha.
     """ 
     initial_year = str(initial_date.year)
-    final_year = str(final_year.year)  
+    final_year = str(final_date.year)  
+
     if initial_date != None and final_date != None:
         
         if initial_year == final_year:
-
-            return 0 , om.values(initial_year,initial_date,final_date)
+            
+            keylow = om.get(catalog[initial_year],initial_date)['key']
+            keyhigh = om.get(catalog[initial_year],final_date)['key']
+       
+            return 0 , om.values(catalog[initial_year],keylow,keyhigh)
         else:
+
             keymax = om.maxKey(catalog[initial_year])
-            dates_initial_year = om.values(initial_year,initial_date,keymax)
+            dates_initial_year = om.values(catalog[initial_year],initial_date,keymax)
 
             keymin = om.minKey(catalog[final_year])
-            dates_final_year = om.values(final_year,final_date,keymin)
+            dates_final_year = om.values(catalog[final_year],final_date,keymin)
             return 1 , dates_initial_year , dates_final_year
 
     return None

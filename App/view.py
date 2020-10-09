@@ -109,7 +109,7 @@ def printAccidentsByDate(accidents_by_date,search_date):
 def printAccidentsBeforeDare(accidents_before,search,catalog):
     """
     RETO3 - REQ2
-    Imprime los accidentes anteriores a una fecha
+    Imprime los accidentes anteriores a una fecha.
     """
     if accidents_before is not None:
  
@@ -132,13 +132,14 @@ def printAccidentsBeforeDare(accidents_before,search,catalog):
         print('\nAntes de la fecha ocurrieron: ' +  str(num_acc_before_date) + ' accidentes.')
         print('El día en el que se presentaron más accidentes antes de la fecha ingresada fue: '+ str(winner_day['key']) + '. Con: '+ str(lt.size(winner_day['value']['Accidents_lst'])) + ' accidentes.')
 
-
     else:
         print('La fecha ingresada no es válida.')
 
-
-
-
+def printAccidentsInRange(accidents):
+    """
+    RETO3 - REQ3
+    Imprime los accidentes en un rango de fechas.
+    """    
 
 
 # ___________________________________________________
@@ -154,7 +155,7 @@ def printMenu():
     print("2- Cargar información de accidentes")
     print("3- Requerimento 1: Conocer los accidentes en una fecha.")
     print("4- Requerimento 2: Conocer los accidentes anteriores a una fecha.")
-#    print("5- Requerimento 3: Conocer los accidentes en un rango de fechas.")
+    print("5- Requerimento 3: Conocer los accidentes en un rango de fechas.")
 #    print("6- Requerimento 4: Conocer el Estado con más accidentes.")
 #    print("7- Requerimento 5: Conocer los accidentes por rango de horas.")
 #    print("8- Requerimento 6: Conocer la zona geográfica más accidentada.")
@@ -192,8 +193,12 @@ while True:
         accidents_before = controller.getAccidentsBeforeDate(cont,search_date)
         printAccidentsBeforeDare(accidents_before,search_date,cont)
 
-#    elif int(inputs[0]) == 5:
-#        print("\nRequerimiento No 3 del reto 3: ")
+    elif int(inputs[0]) == 5:
+        print("\nRequerimiento No 3 del reto 3: ")
+        initial_date = input("\nIngrese el límite inferior del rango de fechas (YYYY-MM-DD):")
+        final_date = input("\nIngrese el límite superior del rango de fechas (YYYY-MM-DD):")
+        accidents_in_range = controller.getAccidentsInRange(cont,initial_date,final_date)
+        printAccidentsInRange(accidents_in_range)
 #    elif int(inputs[0]) == 6:
 #        print("\nRequerimiento No 4 del reto 3: ")
 #    elif int(inputs[0]) == 7:

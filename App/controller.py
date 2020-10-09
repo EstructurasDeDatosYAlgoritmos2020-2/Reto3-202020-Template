@@ -87,6 +87,18 @@ def getAccidentsBeforeDate(catalog,search_date):
     year_bst = catalog[year_search_date]    
     return model.getAccidentsBeforeDate(year_bst,search_date.date())
 
+def getAccidentsInRange(catalog,initial_date,final_date):
+    """
+    RETO3 - REQ2
+    Llama la función en model que retorna
+    los accidentes en un rango de fechas.
+    """
+
+    initial_date = datetime.datetime.strptime(initial_date, '%Y-%m-%d')
+    final_date = datetime.datetime.strptime(final_date, '%Y-%m-%d')
+    initial_year = str(initial_date.year)
+    final_year = str(final_year.year)
+    return model.getAccidentsInRange(initial_date,initial_year,final_date,final_year)
 
 def yearsSize(catalog):
     """

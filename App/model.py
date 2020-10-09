@@ -188,6 +188,11 @@ def getAccidentsBeforeDate(year_bst,search_date):
         return om.values(year_bst,keylow,key_date)
     return None
 
+def getAccidentsInRange():
+    """
+    RETO3 - REQ3
+    Retorna el número de accidentes ocurridos anteriores a una fecha.
+    """   
 
     
 def yearsSize(catalog):

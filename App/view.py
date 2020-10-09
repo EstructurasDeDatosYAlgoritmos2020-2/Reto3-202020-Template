@@ -135,7 +135,7 @@ def printAccidentsBeforeDare(accidents_before,search,catalog):
     else:
         print('La fecha ingresada no es válida.')
 
-def printAccidentsInRange(accidents,catalog):
+def printAccidentsInRange(catalog,initial_date,final_date,accidents_in_range):
     """
     RETO3 - REQ3
     Imprime los accidentes en un rango de fechas.
@@ -150,13 +150,13 @@ def printAccidentsInRange(accidents,catalog):
             day = om.get(catalog[year_bst],key_acc)
     
             num_accidents_in_day =  lt.size(day['value']['Accidents_lst'])
-            num_acc_before_date = num_acc_before_date + num_accidents_in_day
+            num_acc_in_range = num_acc_in_range + num_accidents_in_day
 
-            if num_accidents_in_day > more_accidents:
-                more_accidents = num_accidents_in_day
-                winner_day = day 
+             
 
-                
+        print('\nEntre: ' +  str(initial_date) + ' y: '+ str(final_date)+' ocurrieron: '+ str(num_acc_in_range)+ ' accidentes.')       
+    
+    
     elif accidents[0] == 1:
         num_acc_in_range = 0 
     else:
@@ -218,7 +218,7 @@ while True:
         initial_date = input("\nIngrese el límite inferior del rango de fechas (YYYY-MM-DD):")
         final_date = input("\nIngrese el límite superior del rango de fechas (YYYY-MM-DD):")
         accidents_in_range = controller.getAccidentsInRange(cont,initial_date,final_date)
-        printAccidentsInRange(accidents_in_range,cont)
+        printAccidentsInRange(cont,initial_date,final_date,accidents_in_range)
 #    elif int(inputs[0]) == 6:
 #        print("\nRequerimiento No 4 del reto 3: ")
 #    elif int(inputs[0]) == 7:

@@ -195,7 +195,7 @@ def getAccidentsInRange(catalog,initial_date,final_date):
     """ 
     initial_year = str(initial_date.year)
     final_year = str(final_date.year)  
-
+    
     if initial_date != None and final_date != None:
         
         if initial_year == final_year:

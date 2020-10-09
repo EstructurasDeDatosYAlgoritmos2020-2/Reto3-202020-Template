@@ -96,9 +96,8 @@ def getAccidentsInRange(catalog,initial_date,final_date):
 
     initial_date = datetime.datetime.strptime(initial_date, '%Y-%m-%d')
     final_date = datetime.datetime.strptime(final_date, '%Y-%m-%d')
-    initial_year = str(initial_date.year)
-    final_year = str(final_year.year)
-    return model.getAccidentsInRange(initial_date,initial_year,final_date,final_year)
+
+    return model.getAccidentsInRange(catalog,initial_date,final_date)
 
 def yearsSize(catalog):
     """

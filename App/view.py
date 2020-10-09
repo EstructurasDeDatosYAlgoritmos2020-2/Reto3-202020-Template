@@ -43,7 +43,8 @@ operación seleccionada.
 
 
 #accidentsFile = 'Accidents/us_accidents_small.csv'
-accidentsFile = 'Accidents/US_Accidents_Dec19.csv'
+#accidentsFile = 'Accidents/US_Accidents_Dec19.csv'
+accidentsFile = 'Accidents/us_accidents_dis_2016.csv'
 
 
 # ___________________________________________________
@@ -60,17 +61,21 @@ def printData(cont):
     print('Accidentes cargados: ' + str(controller.accidentsSize(cont)))
     print('Fechas en las que ocurrieron accidentes cargadas: ' + str(controller.yearsSize(cont)))
 
-    print('\nAccidentes en 2016: ' + str(controller.eachYearSize(cont)[0]))
+    print('\nFechas en las que ocurrieron accidentes en 2016: ' + str(controller.eachYearSize(cont)[0]))
     print('Altura árbol 2016: ' + str(controller.eachYearHeight(cont)[0]))
 
-    print('\nAccidentes en 2017: '+ str(controller.eachYearSize(cont)[1]))
+    print('\nFechas en las que ocurrieron accidentes en 2017: '+ str(controller.eachYearSize(cont)[1]))
     print('Altura árbol 2017: ' + str(controller.eachYearHeight(cont)[1]))
 
-    print('\nAccidentes en 2018: '+ str(controller.eachYearSize(cont)[2]))
+    print('\nFechas en las que ocurrieron accidentes en 2018: '+ str(controller.eachYearSize(cont)[2]))
     print('Altura árbol 2018: ' + str(controller.eachYearHeight(cont)[2]))
 
-    print('\nAccidentes en 2019: '+ str(controller.eachYearSize(cont)[3]))
+    print('\nFechas en las que ocurrieron accidentes en 2019: '+ str(controller.eachYearSize(cont)[3]))
     print('Altura árbol 2019: ' + str(controller.eachYearHeight(cont)[3]))
+
+    print('\nFechas en las que ocurrieron accidentes en 2020: '+ str(controller.eachYearSize(cont)[4]))
+    print('Altura árbol 2020: ' + str(controller.eachYearHeight(cont)[4]))
+
 
 def printAccidentsByDate(accidents_by_date,search_date):
     """
@@ -98,6 +103,24 @@ def printAccidentsByDate(accidents_by_date,search_date):
     else:
         print(accidents_by_date)
         print('No se encontraron accidentes en la fecha ingresada o la fecha ingresada no se encuentra entre los años 2016-2019.')
+
+
+def printAccidentsBeforeDare(accidents_before,search):
+    """
+    RETO3 - REQ2
+    Imprime los accidentes anteriores a una fecha
+    """
+    if accidents_before is not None:
+        print('Los accidentes ocurridos anteriores al día: ' + search_date)
+        print("retornooooooooooo",accidents_before)
+
+    else:
+        print('No se encontraron accidentes en la fecha ingresada.')
+
+
+
+
+
 
 # ___________________________________________________
 #  Menu principal
@@ -146,6 +169,9 @@ while True:
 
     elif int(inputs[0]) == 4:
         print("\nRequerimiento No 2 del reto 3: ")
+        search_date = input("Ingrese la fecha desde donde se quieren buscar los accidentes anteriores (YYYY-MM-DD):")
+        accidents_before = controller.getAccidentsBeforeDate(cont,search_date)
+        printAccidentsBeforeDare(accidents_before,search_date)
 #    elif int(inputs[0]) == 5:
 #        print("\nRequerimiento No 3 del reto 3: ")
 #    elif int(inputs[0]) == 6:

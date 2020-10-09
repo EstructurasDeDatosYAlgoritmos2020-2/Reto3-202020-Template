@@ -47,7 +47,8 @@ def newCatalog():
                 '2016': None,
                 '2017': None,
                 '2018': None,
-                '2019': None
+                '2019': None,
+                '2020': None
                 }
 
     catalog['accidents'] = lt.newList('ARRAY_LIST',compareAccidentsID)
@@ -60,6 +61,8 @@ def newCatalog():
                                       comparefunction=compareDates)
     catalog['2019'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
+    catalog['2020'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareDates)                                  
     return catalog
 
 # ==============================
@@ -74,12 +77,14 @@ def addAccident(catalog,accident):
     cuya llave es la información del accidente.
     """  
     occurred_start_date = accident['Start_Time']
+    if occurred_start_date is not None:
+
+        accident_date = datetime.datetime.strptime(occurred_start_date, '%Y-%m-%d %H:%M:%S')
+        ocurred_year = str(accident_date.year)
     
-    accident_date = datetime.datetime.strptime(occurred_start_date, '%Y-%m-%d %H:%M:%S')
-    ocurred_year = str(accident_date.year)
+        lt.addLast(catalog['accidents'],accident)
+        uptadeAccidentInDate(catalog[ocurred_year],accident) 
     
-    lt.addLast(catalog['accidents'],accident)
-    uptadeAccidentInDate(catalog[ocurred_year],accident) 
     return catalog 
 
 def uptadeAccidentInDate(year_map,accident):
@@ -161,19 +166,27 @@ def newSeverityEntry(accident):
 def getAccidentsByDate(year_bst,search_date):
     """
     RETO3 - REQ1
-    Retorna el número de accidentes ocurridos en una fecha.
+    Retorna los accidentes ocurridos en una fecha.
     """        
-
     date_accidents = om.get(year_bst,search_date)
-
-    if date_accidents['key'] is not None:
+    if date_accidents is not None:
         return me.getValue(date_accidents)
-    
     return None
+
+def getAccidentsBeforeDate(year_bst,search_date):
+    """
+    RETO3 - REQ2
+    Retorna el número de accidentes ocurridos anteriores a una fecha.
+    """       
+    date_accidents = om.get(year_bst,search_date)
+    if date_accidents != None:
+        return om.rank(year_bst,date_accidents)
+    return None
+
+
     
 def yearsSize(catalog):
     """
-    RETO3 - REQ1
     Número de fechas en las que ocurrieron accidentes de todos los años.
     """    
     y1=om.size(catalog['2016'])
@@ -184,14 +197,12 @@ def yearsSize(catalog):
     return y1 + y2 + y3 +y4
 def accidentsSize(catalog):
     """
-    RETO3 - REQ1
     Número de accidentes.
     """  
     return lt.size(catalog['accidents'])
 
 def eachYearSize(catalog):
     """
-    RETO3 - REQ1
     Número de fechas en las que ocurrieron accidentes de
     cada año.
     """    
@@ -199,20 +210,21 @@ def eachYearSize(catalog):
     y2=om.size(catalog['2017'])
     y3=om.size(catalog['2018'])
     y4=om.size(catalog['2019'])
+    y5=om.size(catalog['2020'])
 
-    return y1 , y2 , y3 , y4
+    return y1 , y2 , y3 , y4 , y5
 
 def eachYearHeight(catalog):
     """
-    RETO3 - REQ1
     Altura del árbol de cada año.
     """       
     y1 = om.height(catalog['2016'])
     y2 = om.height(catalog['2017'])
     y3 = om.height(catalog['2018'])
     y4 = om.height(catalog['2019'])
+    y5 = y4=om.height(catalog['2020'])
 
-    return y1, y2, y3, y4
+    return y1, y2, y3, y4 , y5
 
 # ==============================
 # Funciones de Comparacion
@@ -220,7 +232,6 @@ def eachYearHeight(catalog):
 
 def compareDates(date1,date2):
     """
-    RETO3 - REQ1
     Compara dos fechas de accidentes en un 
     año dado.
     """
@@ -233,7 +244,6 @@ def compareDates(date1,date2):
     
 def compareAccidentsID(id1,id2):
     """
-    RETO3 - REQ1
     Compara dos IDS de accidentes. 
     """
     if (id1 == id2):
@@ -245,7 +255,6 @@ def compareAccidentsID(id1,id2):
 
 def compareSeverity(sev_accident1,sev_accident2):
     """
-    RETO3 - REQ1
     Compara dos grados de gravedad de accidentes. 
     """
     sev_accident2 = me.getKey(sev_accident2)

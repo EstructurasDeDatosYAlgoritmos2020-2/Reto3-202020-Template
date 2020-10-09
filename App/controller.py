@@ -69,21 +69,27 @@ def getAccidentsByDate(catalog,search_date):
     """
     RETO3 - REQ1
     Llama la función en model que retorna
-    el número de accidentes ocurridos en una fecha.
+    el los accidentes ocurridos en una fecha.
     """    
     search_date = datetime.datetime.strptime(search_date, '%Y-%m-%d')
-    year_search_date = str(search_date.year)
-
-#    if year_search_date != '2016' or year_search_date != '2017' or year_search_date != '2018' or year_search_date != '2019':
-#        return None
-
+    year_search_date = str(search_date.year)    
     year_bst = catalog[year_search_date]    
     return model.getAccidentsByDate(year_bst,search_date.date())
+
+def getAccidentsBeforeDate(catalog,search_date):
+    """
+    RETO3 - REQ2
+    Llama la función en model que retorna
+    el número de accidentes ocurridos anteriores a una fecha.
+    """      
+    search_date = datetime.datetime.strptime(search_date, '%Y-%m-%d')
+    year_search_date = str(search_date.year)
+    year_bst = catalog[year_search_date]    
+    return model.getAccidentsBeforeDate(year_bst,search_date.date())
 
 
 def yearsSize(catalog):
     """
-    RETO3 - REQ1
     Llama la función en model que retorna
     el número de fechas en las que ocurrieron accidentes en todos
     los años.
@@ -92,7 +98,6 @@ def yearsSize(catalog):
 
 def accidentsSize(catalog):
     """
-    RETO3 - REQ1
     Llama la función en model que retorna
     el número de accidentes.
     """    

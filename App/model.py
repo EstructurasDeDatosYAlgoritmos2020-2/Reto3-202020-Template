@@ -30,8 +30,6 @@ assert config
 """
 En este archivo definimos los TADs que vamos a usar,
 es decir contiene los modelos con los datos en memoria
-
-
 """
 
 # -----------------------------------------------------
@@ -62,7 +60,10 @@ def newCatalog():
     catalog['2019'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
     catalog['2020'] = om.newMap(omaptype='RBT',
-                                      comparefunction=compareDates)                                  
+                                      comparefunction=compareDates)    
+    catalog['States'] = m.newMap(100,maptype='PROBING',
+                                    loadfactor=0.4,
+                                    comparefunction=compareStatesNames)                              
     return catalog
 
 # ==============================
@@ -71,7 +72,6 @@ def newCatalog():
 
 def addAccident(catalog,accident):
     """
-    RETO3 - REQ1
     Adiciona un accidente a la lista de accidentes.
     Adiciona el ID de un accidente a su respectivo año de ocurrencia,
     cuya llave es la información del accidente.
@@ -87,9 +87,17 @@ def addAccident(catalog,accident):
     
     return catalog 
 
+def newState(name):
+    """
+    RETO3 - REQ4
+    Adiciona un Estado al mapa de Estados.
+    """
+    state = {"Name": name, "Accidents": None}
+    state['Accidents'] = lt.newList('ARRAY_LIST',compareDates)
+    return state
+
 def uptadeAccidentInDate(year_map,accident):
     """
-    RETO3 - REQ1
     Se toma la fecha del accidente y se busca si ya existe en el arbol
     dicha fecha. Si es asi, se adiciona a su lista de accidentes
     y se añade a una tabla de hash por su severidad.
@@ -111,11 +119,9 @@ def uptadeAccidentInDate(year_map,accident):
     addSeverityToDateEntry(date_entry,accident)
     return year_map
 
-
 def addSeverityToDateEntry(date_entry,accident):
     """
-    RETO3 - REQ1
-    Actualiza un indice de grado de severidad.  Este indice tiene una lista
+    Actualiza un indice de grado de severidad. Este indice tiene una lista
     de accidentes y una tabla de hash cuya llave es el grado de severidad del
     accidente y el valor es una lista con los accidentes de dicha severidad
     en la fecha que se está consultando (dada por el nodo del arbol)
@@ -134,9 +140,30 @@ def addSeverityToDateEntry(date_entry,accident):
     
     return date_entry
 
+def addAccidentToState(catalog,accident):
+    """
+    Crea una entrada en el mapa para cada Estado.
+    Si la entrada ya existe, se actualizan sus datos
+    añadiéndose el accidente a su lista.
+    """
+
+    states_mp = catalog['States']
+    acc_state = accident['State']
+    exists_state = m.contains(states_mp,acc_state)
+
+    if exists_state:
+        entry = mp.get(states_mp,acc_state)
+        State = me.getValue(entry)
+    
+    else:
+        State = newState(acc_state)
+        m.put(states_mp,acc_state,State)
+
+    lt.addLast(State['Accidents'],accident)
+
+
 def newDateEntry():
     """
-    RETO3 - REQ1
     Se crea un nodo dada una fecha con sus respectivas llaves: 
     Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
     """
@@ -149,7 +176,6 @@ def newDateEntry():
 
 def newSeverityEntry(accident):
     """
-    RETO3 - REQ1
     Se crea un nuevo grado de gravedad con sus respectivas llaves:
     Severity (Grado de gravedad) y Lista de accidentes con esta severidad
     (Single linked lt). 
@@ -199,13 +225,12 @@ def getAccidentsInRange(catalog,initial_date,final_date):
     if initial_date != None and final_date != None:
         
         if initial_year == final_year:
-            
             keylow = om.get(catalog[initial_year],initial_date)['key']
             keyhigh = om.get(catalog[initial_year],final_date)['key']
-       
+    
             return 0 , om.values(catalog[initial_year],keylow,keyhigh)
-        else:
 
+        else:
             keymax = om.maxKey(catalog[initial_year])
             dates_initial_year = om.values(catalog[initial_year],initial_date,keymax)
 
@@ -215,7 +240,17 @@ def getAccidentsInRange(catalog,initial_date,final_date):
 
     return None
 
-    
+def getStateWithMoreAccidents(catalog):
+    """
+    RETO3 - REQ4
+    Retorna el Estado con más accidentes registrados.
+    """ 
+    states = catalog['States']
+    lst_keys = m.keySet
+
+
+
+
 def yearsSize(catalog):
     """
     Número de fechas en las que ocurrieron accidentes de todos los años.
@@ -231,7 +266,6 @@ def accidentsSize(catalog):
     Número de accidentes.
     """  
     return lt.size(catalog['accidents'])
-
 def eachYearSize(catalog):
     """
     Número de fechas en las que ocurrieron accidentes de
@@ -244,7 +278,6 @@ def eachYearSize(catalog):
     y5=om.size(catalog['2020'])
 
     return y1 , y2 , y3 , y4 , y5
-
 def eachYearHeight(catalog):
     """
     Altura del árbol de cada año.
@@ -292,6 +325,17 @@ def compareSeverity(sev_accident1,sev_accident2):
     if (sev_accident1 == sev_accident2):
         return 0
     elif (sev_accident1 > sev_accident2):
+        return 1
+    else:
+        return -1
+
+def compareStatesNames(state1,state2):
+    """
+    Compara dos nombres de Estados.
+    """
+    if state1 == state2:
+        return 0
+    elif state1 > state2:
         return 1
     else:
         return -1

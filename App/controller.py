@@ -58,6 +58,7 @@ def loadData(catalog, accidentsfile):
                                 delimiter=",")
     for accident in input_file:
         model.addAccident(catalog,accident)
+        mode.addAccidentToState(catalog,accident)
     
     return catalog
 
@@ -89,15 +90,21 @@ def getAccidentsBeforeDate(catalog,search_date):
 
 def getAccidentsInRange(catalog,initial_date,final_date):
     """
-    RETO3 - REQ2
+    RETO3 - REQ3
     Llama la función en model que retorna
     los accidentes en un rango de fechas.
     """
-
     initial_date = datetime.datetime.strptime(initial_date, '%Y-%m-%d')
     final_date = datetime.datetime.strptime(final_date, '%Y-%m-%d')
-
     return model.getAccidentsInRange(catalog,initial_date.date(),final_date.date())
+
+def getStateWithMoreAccidents(catalog):
+    """
+    RETO3 - REQ4
+    Llama la función en model que retorna
+    el Estado con más accidentes reportados.
+    """    
+    return model.getStateWithMoreAccidents(catalog)
 
 def yearsSize(catalog):
     """

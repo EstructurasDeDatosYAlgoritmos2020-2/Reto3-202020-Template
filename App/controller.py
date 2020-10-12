@@ -58,7 +58,7 @@ def loadData(catalog, accidentsfile):
                                 delimiter=",")
     for accident in input_file:
         model.addAccident(catalog,accident)
-        mode.addAccidentToState(catalog,accident)
+#        model.addAccidentToState(catalog,accident)
     
     return catalog
 

@@ -148,7 +148,7 @@ def addAccidentToState(catalog,accident):
     """
 
     states_mp = catalog['States']
-    acc_state = accident['State']
+    acc_state = str(accident['State'])
     exists_state = m.contains(states_mp,acc_state)
 
     if exists_state:

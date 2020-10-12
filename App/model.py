@@ -31,8 +31,6 @@ assert config
 """
 En este archivo definimos los TADs que vamos a usar,
 es decir contiene los modelos con los datos en memoria
-
-
 """
 
 # -----------------------------------------------------
@@ -48,7 +46,8 @@ def newCatalog():
                 '2016': None,
                 '2017': None,
                 '2018': None,
-                '2019': None
+                '2019': None,
+                '2020': None
                 }
 
     catalog['accidents'] = lt.newList('ARRAY_LIST',compareAccidentsID)
@@ -61,6 +60,11 @@ def newCatalog():
                                       comparefunction=compareDates)
     catalog['2019'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
+    catalog['2020'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareDates)    
+    catalog['States'] = m.newMap(100,maptype='PROBING',
+                                    loadfactor=0.4,
+                                    comparefunction=compareStatesNames)                              
     return catalog
 
 # ==============================
@@ -69,23 +73,32 @@ def newCatalog():
 
 def addAccident(catalog,accident):
     """
-    RETO3 - REQ1
     Adiciona un accidente a la lista de accidentes.
     Adiciona el ID de un accidente a su respectivo año de ocurrencia,
     cuya llave es la información del accidente.
     """  
     occurred_start_date = accident['Start_Time']
+    if occurred_start_date is not None:
+
+        accident_date = datetime.datetime.strptime(occurred_start_date, '%Y-%m-%d %H:%M:%S')
+        ocurred_year = str(accident_date.year)
     
-    accident_date = datetime.datetime.strptime(occurred_start_date, '%Y-%m-%d %H:%M:%S')
-    ocurred_year = str(accident_date.year)
+        lt.addLast(catalog['accidents'],accident)
+        uptadeAccidentInDate(catalog[ocurred_year],accident) 
     
-    lt.addLast(catalog['accidents'],accident)
-    uptadeAccidentInDate(catalog[ocurred_year],accident) 
     return catalog 
+
+def newState(name):
+    """
+    RETO3 - REQ4
+    Adiciona un Estado al mapa de Estados.
+    """
+    state = {"Name": name, "Accidents": None}
+    state['Accidents'] = lt.newList('ARRAY_LIST',compareDates)
+    return state
 
 def uptadeAccidentInDate(year_map,accident):
     """
-    RETO3 - REQ1
     Se toma la fecha del accidente y se busca si ya existe en el arbol
     dicha fecha. Si es asi, se adiciona a su lista de accidentes
     y se añade a una tabla de hash por su severidad.
@@ -107,11 +120,9 @@ def uptadeAccidentInDate(year_map,accident):
     addSeverityToDateEntry(date_entry,accident)
     return year_map
 
-
 def addSeverityToDateEntry(date_entry,accident):
     """
-    RETO3 - REQ1
-    Actualiza un indice de grado de severidad.  Este indice tiene una lista
+    Actualiza un indice de grado de severidad. Este indice tiene una lista
     de accidentes y una tabla de hash cuya llave es el grado de severidad del
     accidente y el valor es una lista con los accidentes de dicha severidad
     en la fecha que se está consultando (dada por el nodo del arbol)
@@ -130,9 +141,30 @@ def addSeverityToDateEntry(date_entry,accident):
     
     return date_entry
 
+def addAccidentToState(catalog,accident):
+    """
+    Crea una entrada en el mapa para cada Estado.
+    Si la entrada ya existe, se actualizan sus datos
+    añadiéndose el accidente a su lista.
+    """
+
+    states_mp = catalog['States']
+    acc_state = str(accident['State'])
+    exists_state = m.contains(states_mp,acc_state)
+
+    if exists_state:
+        entry = mp.get(states_mp,acc_state)
+        State = me.getValue(entry)
+    
+    else:
+        State = newState(acc_state)
+        m.put(states_mp,acc_state,State)
+
+    lt.addLast(State['Accidents'],accident)
+
+
 def newDateEntry():
     """
-    RETO3 - REQ1
     Se crea un nodo dada una fecha con sus respectivas llaves: 
     Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
     """
@@ -145,7 +177,6 @@ def newDateEntry():
 
 def newSeverityEntry(accident):
     """
-    RETO3 - REQ1
     Se crea un nuevo grado de gravedad con sus respectivas llaves:
     Severity (Grado de gravedad) y Lista de accidentes con esta severidad
     (Single linked lt). 
@@ -162,19 +193,67 @@ def newSeverityEntry(accident):
 def getAccidentsByDate(year_bst,search_date):
     """
     RETO3 - REQ1
-    Retorna el número de accidentes ocurridos en una fecha.
+    Retorna los accidentes ocurridos en una fecha.
     """        
-
     date_accidents = om.get(year_bst,search_date)
-
-    if date_accidents['key'] is not None:
+    if date_accidents is not None:
         return me.getValue(date_accidents)
-    
     return None
+
+def getAccidentsBeforeDate(year_bst,search_date):
+    """
+    RETO3 - REQ2
+    Retorna el número de accidentes ocurridos anteriores a una fecha.
+    """       
+    date_accidents = om.get(year_bst,search_date)
     
+    if date_accidents != None:
+
+        key_date = date_accidents['key']
+        keylow = om.minKey(year_bst)
+
+        return om.values(year_bst,keylow,key_date)
+    return None
+
+def getAccidentsInRange(catalog,initial_date,final_date):
+    """
+    RETO3 - REQ3
+    Retorna el número de accidentes ocurridos anteriores a una fecha.
+    """ 
+    initial_year = str(initial_date.year)
+    final_year = str(final_date.year)  
+    
+    if initial_date != None and final_date != None:
+        
+        if initial_year == final_year:
+            keylow = om.get(catalog[initial_year],initial_date)['key']
+            keyhigh = om.get(catalog[initial_year],final_date)['key']
+    
+            return 0 , om.values(catalog[initial_year],keylow,keyhigh)
+
+        else:
+            keymax = om.maxKey(catalog[initial_year])
+            dates_initial_year = om.values(catalog[initial_year],initial_date,keymax)
+
+            keymin = om.minKey(catalog[final_year])
+            dates_final_year = om.values(catalog[final_year],final_date,keymin)
+            return 1 , dates_initial_year , dates_final_year
+
+    return None
+
+def getStateWithMoreAccidents(catalog):
+    """
+    RETO3 - REQ4
+    Retorna el Estado con más accidentes registrados.
+    """ 
+    states = catalog['States']
+    lst_keys = m.keySet
+
+
+
+
 def yearsSize(catalog):
     """
-    RETO3 - REQ1
     Número de fechas en las que ocurrieron accidentes de todos los años.
     """    
     y1=om.size(catalog['2016'])
@@ -185,14 +264,11 @@ def yearsSize(catalog):
     return y1 + y2 + y3 +y4
 def accidentsSize(catalog):
     """
-    RETO3 - REQ1
     Número de accidentes.
     """  
     return lt.size(catalog['accidents'])
-
 def eachYearSize(catalog):
     """
-    RETO3 - REQ1
     Número de fechas en las que ocurrieron accidentes de
     cada año.
     """    
@@ -200,20 +276,20 @@ def eachYearSize(catalog):
     y2=om.size(catalog['2017'])
     y3=om.size(catalog['2018'])
     y4=om.size(catalog['2019'])
+    y5=om.size(catalog['2020'])
 
-    return y1 , y2 , y3 , y4
-
+    return y1 , y2 , y3 , y4 , y5
 def eachYearHeight(catalog):
     """
-    RETO3 - REQ1
     Altura del árbol de cada año.
     """       
     y1 = om.height(catalog['2016'])
     y2 = om.height(catalog['2017'])
     y3 = om.height(catalog['2018'])
     y4 = om.height(catalog['2019'])
+    y5 = y4=om.height(catalog['2020'])
 
-    return y1, y2, y3, y4
+    return y1, y2, y3, y4 , y5
 
 # ==============================
 # Funciones de Comparacion
@@ -221,7 +297,6 @@ def eachYearHeight(catalog):
 
 def compareDates(date1,date2):
     """
-    RETO3 - REQ1
     Compara dos fechas de accidentes en un 
     año dado.
     """
@@ -234,7 +309,6 @@ def compareDates(date1,date2):
     
 def compareAccidentsID(id1,id2):
     """
-    RETO3 - REQ1
     Compara dos IDS de accidentes. 
     """
     if (id1 == id2):
@@ -246,13 +320,23 @@ def compareAccidentsID(id1,id2):
 
 def compareSeverity(sev_accident1,sev_accident2):
     """
-    RETO3 - REQ1
     Compara dos grados de gravedad de accidentes. 
     """
     sev_accident2 = me.getKey(sev_accident2)
     if (sev_accident1 == sev_accident2):
         return 0
     elif (sev_accident1 > sev_accident2):
+        return 1
+    else:
+        return -1
+
+def compareStatesNames(state1,state2):
+    """
+    Compara dos nombres de Estados.
+    """
+    if state1 == state2:
+        return 0
+    elif state1 > state2:
         return 1
     else:
         return -1

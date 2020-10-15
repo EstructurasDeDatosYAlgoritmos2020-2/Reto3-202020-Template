@@ -56,12 +56,14 @@ def loadData(catalog, accidentsfile):
     accidentsfile = cf.data_dir + accidentsfile
     input_file = csv.DictReader(open(accidentsfile, encoding="utf-8"),
                                 delimiter=",")
+    cont = 0
     for accident in input_file:
         model.addAccident(catalog,accident)
-#        model.addAccidentToState(catalog,accident)
+        model.addAccidentToState(catalog,accident)
+        cont = cont + 1
+        if cont == 10:
+            break
     
-    return catalog
-
 # ___________________________________________________
 #  Funciones para consultas
 # ___________________________________________________
@@ -135,3 +137,11 @@ def eachYearHeight(catalog):
     la altura del árbol de cada año.
     """    
     return model.eachYearHeight(catalog)    
+
+def statesSize(catalog):
+    """
+    RETO3 - REQ4
+    Llama la función en model que retorna
+    el número de Estados cargados.
+    """
+    return model.statesSize(catalog)

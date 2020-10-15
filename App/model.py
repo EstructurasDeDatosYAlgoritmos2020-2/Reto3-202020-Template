@@ -62,8 +62,8 @@ def newCatalog():
                                       comparefunction=compareDates)
     catalog['2020'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)    
-    catalog['States'] = m.newMap(100,maptype='PROBING',
-                                    loadfactor=0.4,
+    catalog['States'] = m.newMap(55,maptype='CHAINING',
+                                    loadfactor=2,
                                     comparefunction=compareStatesNames)                              
     return catalog
 
@@ -134,7 +134,7 @@ def addSeverityToDateEntry(date_entry,accident):
     if entry is None:
         severity_entry = newSeverityEntry(accident)
         lt.addLast(severity_entry['ListBySeverity'],accident)
-        m.put(date_entry['Severities_mp'] , severity, severity_entry)
+   #     m.put(date_entry['Severities_mp'] , severity, severity_entry)
     else:
         severity_entry = me.getValue(entry)
         lt.addLast(severity_entry['ListBySeverity'],accident)
@@ -143,25 +143,27 @@ def addSeverityToDateEntry(date_entry,accident):
 
 def addAccidentToState(catalog,accident):
     """
+    RETO3 - REQ4
     Crea una entrada en el mapa para cada Estado.
     Si la entrada ya existe, se actualizan sus datos
     añadiéndose el accidente a su lista.
     """
-
     states_mp = catalog['States']
-    acc_state = str(accident['State'])
-    exists_state = m.contains(states_mp,acc_state)
+    state_name = str(accident['State'])
+    exists_state = m.contains(states_mp,state_name)
 
     if exists_state:
-        entry = mp.get(states_mp,acc_state)
-        State = me.getValue(entry)
-    
+        entry = m.get(states_mp,state_name)
+        state = me.getValue(entry)
     else:
-        State = newState(acc_state)
-        m.put(states_mp,acc_state,State)
+        state = newState(state_name)
+        print("Antes del put: ")
+        m.put(states_mp,state_name,state)
+        print("Antes Contains: ")
+        prueba = m.contains(states_mp,state_name)
+        print("Estado agregado", state_name, " Prueba de busqueda:" , prueba)
 
-    lt.addLast(State['Accidents'],accident)
-
+    lt.addLast(state['Accidents'],accident)
 
 def newDateEntry():
     """
@@ -249,9 +251,6 @@ def getStateWithMoreAccidents(catalog):
     states = catalog['States']
     lst_keys = m.keySet
 
-
-
-
 def yearsSize(catalog):
     """
     Número de fechas en las que ocurrieron accidentes de todos los años.
@@ -279,6 +278,12 @@ def eachYearSize(catalog):
     y5=om.size(catalog['2020'])
 
     return y1 , y2 , y3 , y4 , y5
+def statesSize(catalog):
+    """
+    RETO3 - REQ4
+    Número de estados cargados.
+    """
+    return m.size(catalog['States'])
 def eachYearHeight(catalog):
     """
     Altura del árbol de cada año.
@@ -334,9 +339,11 @@ def compareStatesNames(state1,state2):
     """
     Compara dos nombres de Estados.
     """
-    if state1 == state2:
+    state1 = str(state1)
+    state2 = str(state2)
+    if (state1 == state2):
         return 0
-    elif state1 > state2:
+    elif (state1 > state2):
         return 1
     else:
         return -1

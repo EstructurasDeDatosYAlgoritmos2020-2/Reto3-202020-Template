@@ -101,13 +101,14 @@ def put(map, key, value):
         hash = hashValue(map, key)      # Se obtiene el hascode de la llave
         entry = me.newMapEntry(key, value)
         pos = findSlot(map, key, hash, map['comparefunction'])
+        print("Pos: ", pos)
         lt.changeInfo(map['table'], abs(pos), entry)
         if (pos < 0):           # Se reemplaza el valor con el nuevo valor
             map['size'] += 1
             map['currentfactor'] = map['size'] / map['capacity']
 
-        if (map['currentfactor'] >= map['limitfactor']):
-            rehash(map)
+  #      if (map['currentfactor'] >= map['limitfactor']):
+   #         rehash(map)
         return map
     except Exception as exp:
         error.reraise(exp, 'Probe:put')
@@ -314,7 +315,7 @@ def findSlot(map, key, hashvalue, comparefunction):
                 element = lt.getElement(table, searchpos)
                 if comparefunction(key, element) == 0:  # Es la llave
                     return searchpos               # Se  retorna la posicion
-            searchpos = (((searchpos) % map['capacity'])+1)
+            searchpos = (((searchpos) % map['capacity']+1))
         return -(avail)    # numero negativo indica que el elemento no estaba
     except Exception as exp:
         error.reraise(exp, 'Probe:findslot')

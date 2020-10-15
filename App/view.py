@@ -43,9 +43,9 @@ operación seleccionada.
 # ___________________________________________________
 
 
-#accidentsFile = 'Accidents/us_accidents_small.csv'
+accidentsFile = 'Accidents/us_accidents_small.csv'
 #accidentsFile = 'Accidents/US_Accidents_Dec19.csv'
-accidentsFile = 'Accidents/us_accidents_dis_2016.csv'
+#accidentsFile = 'Accidents/us_accidents_dis_2016.csv'
 
 
 # ___________________________________________________
@@ -61,6 +61,7 @@ def printData(cont):
     """ 
     print('Accidentes cargados: ' + str(controller.accidentsSize(cont)))
     print('Fechas en las que ocurrieron accidentes cargadas: ' + str(controller.yearsSize(cont)))
+    print('Estados cargados: ' + str(controller.statesSize(cont)))
 
     print('\nFechas en las que ocurrieron accidentes en 2016: ' + str(controller.eachYearSize(cont)[0]))
     print('Altura árbol 2016: ' + str(controller.eachYearHeight(cont)[0]))
@@ -265,7 +266,7 @@ while True:
         cont = controller.init()
 
     elif int(inputs[0]) == 2:
-        print("\nCargando información de crimenes ....")
+        print("\nCargando información de accidentes ...")
         controller.loadData(cont,accidentsFile)
         printData(cont)
 

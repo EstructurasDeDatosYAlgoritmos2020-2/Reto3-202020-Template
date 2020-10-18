@@ -62,9 +62,9 @@ def newCatalog():
                                       comparefunction=compareDates)
     catalog['2020'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)    
-    catalog['States'] = m.newMap(55,maptype='CHAINING',
-                                    loadfactor=2,
-                                    comparefunction=compareStatesNames)                              
+#    catalog['States'] = m.newMap(55,maptype='PROBING',
+#                                    loadfactor=0.5,
+#                                    comparefunction=compareStatesNames)                              
     return catalog
 
 # ==============================
@@ -88,14 +88,6 @@ def addAccident(catalog,accident):
     
     return catalog 
 
-def newState(name):
-    """
-    RETO3 - REQ4
-    Adiciona un Estado al mapa de Estados.
-    """
-    state = {"Name": name, "Accidents": None}
-    state['Accidents'] = lt.newList('ARRAY_LIST',compareDates)
-    return state
 
 def uptadeAccidentInDate(year_map,accident):
     """
@@ -134,36 +126,47 @@ def addSeverityToDateEntry(date_entry,accident):
     if entry is None:
         severity_entry = newSeverityEntry(accident)
         lt.addLast(severity_entry['ListBySeverity'],accident)
-   #     m.put(date_entry['Severities_mp'] , severity, severity_entry)
+        m.put(date_entry['Severities_mp'] , severity, severity_entry)
     else:
         severity_entry = me.getValue(entry)
         lt.addLast(severity_entry['ListBySeverity'],accident)
     
     return date_entry
 
-def addAccidentToState(catalog,accident):
-    """
-    RETO3 - REQ4
-    Crea una entrada en el mapa para cada Estado.
-    Si la entrada ya existe, se actualizan sus datos
-    añadiéndose el accidente a su lista.
-    """
-    states_mp = catalog['States']
-    state_name = str(accident['State'])
-    exists_state = m.contains(states_mp,state_name)
 
-    if exists_state:
-        entry = m.get(states_mp,state_name)
-        state = me.getValue(entry)
-    else:
-        state = newState(state_name)
-        print("Antes del put: ")
-        m.put(states_mp,state_name,state)
-        print("Antes Contains: ")
-        prueba = m.contains(states_mp,state_name)
-        print("Estado agregado", state_name, " Prueba de busqueda:" , prueba)
+#def addAccidentToState(catalog,accident):
+#    """
+#    RETO3 - REQ4
+#    Crea una entrada en el mapa para cada Estado.
+#    Si la entrada ya existe, se actualizan sus datos
+#    añadiéndose el accidente a su lista.
+#    """
+#    states_mp = catalog['States']
+#    state_name = str(accident['State'])
+#    exists_state = m.contains(states_mp,state_name)
+#
+#    if exists_state:
+#        entry = m.get(states_mp,state_name)
+#        state = me.getValue(entry)
+#    else:
+#        state = newState(state_name)
+#        m.put(states_mp,state_name,state)
+#        prueba = m.contains(states_mp,state_name)
+#
+#    lt.addLast(state['Accidents'],accident)
 
-    lt.addLast(state['Accidents'],accident)
+# ==============================
+# Funciones para inicializar las entradas de los RBT o Tablas de Hash.
+# ==============================
+
+#def newState(name):
+#    """
+#    RETO3 - REQ4
+#    Adiciona un Estado al mapa de Estados.
+#    """
+#    state = {"Name": name, "Accidents": None}
+#    state['Accidents'] = lt.newList('ARRAY_LIST',compareDates)
+#    return state
 
 def newDateEntry():
     """
@@ -214,42 +217,146 @@ def getAccidentsBeforeDate(year_bst,search_date):
         key_date = date_accidents['key']
         keylow = om.minKey(year_bst)
 
-        return om.values(year_bst,keylow,key_date)
+        return om.keys(year_bst,keylow,key_date)
     return None
 
 def getAccidentsInRange(catalog,initial_date,final_date):
     """
     RETO3 - REQ3
-    Retorna el número de accidentes ocurridos anteriores a una fecha.
+    Retorna el número de accidentes ocurridos en un rango de fecha.
     """ 
     initial_year = str(initial_date.year)
     final_year = str(final_date.year)  
     
     if initial_date != None and final_date != None:
         
-        if initial_year == final_year:
+        if initial_year == final_year:          #Primer caso en el que el rango de fechas se encuentra dentro del mismo año
             keylow = om.get(catalog[initial_year],initial_date)['key']
             keyhigh = om.get(catalog[initial_year],final_date)['key']
     
-            return 0 , om.values(catalog[initial_year],keylow,keyhigh)
+            return 0 , om.keys(catalog[initial_year],keylow,keyhigh)
 
-        else:
+        else:                                   #Segundo caso en el que el rango de fechas abarca dos años
             keymax = om.maxKey(catalog[initial_year])
-            dates_initial_year = om.values(catalog[initial_year],initial_date,keymax)
+            dates_initial_year = om.keys(catalog[initial_year],initial_date,keymax)
 
             keymin = om.minKey(catalog[final_year])
-            dates_final_year = om.values(catalog[final_year],final_date,keymin)
+            dates_final_year = om.keys(catalog[final_year],final_date,keymin)
             return 1 , dates_initial_year , dates_final_year
 
     return None
 
-def getStateWithMoreAccidents(catalog):
+def getStateWithMoreAccidents(catalog,initial_date,final_date):
     """
     RETO3 - REQ4
-    Retorna el Estado con más accidentes registrados.
+    Retorna el Estado con más accidentes registrados en un rango de fechas.
     """ 
-    states = catalog['States']
-    lst_keys = m.keySet
+    states_dict = {}
+    acc_in_range = getAccidentsInRange(catalog,initial_date,final_date)
+
+    if acc_in_range[0] == 0:
+        more_accidents = 0
+
+        iterator = it.newIterator(acc_in_range[1])
+        while it.hasNext(iterator):
+
+            key_acc = it.next(iterator)
+            year_bst = str(key_acc.year)
+            day = om.get(catalog[year_bst],key_acc)
+            day_acc = day['value']['Accidents_lst']
+
+            iterator_acc = it.newIterator(day_acc)
+            while it.hasNext(iterator_acc):
+
+                acc = it.next(iterator_acc)
+                state = acc['State']
+                if state not in states_dict:
+                    states_dict[state] = 1
+                else:
+                    states_dict[state] = states_dict[state] + 1
+
+            num_accidents_in_day =  lt.size(day_acc)
+            if num_accidents_in_day > more_accidents:
+                more_accidents = num_accidents_in_day
+                winner_day = day
+    
+        max_state = 0
+        states_dict_keys = states_dict.keys()
+        for state in states_dict_keys:
+            num_acc_state = states_dict[state]
+            if num_acc_state > max_state:
+                max_state = num_acc_state
+                winner_state = state
+
+    elif acc_in_range[0] == 1:
+        more_accidents1 = 0
+
+        iterator = it.newIterator(acc_in_range[1])
+        while it.hasNext(iterator):
+
+            key_acc = it.next(iterator)
+            year_bst = str(key_acc.year)
+            day = om.get(catalog[year_bst],key_acc)
+            day_acc = day['value']['Accidents_lst']
+
+            iterator_acc = it.newIterator(day_acc)
+            while it.hasNext(iterator_acc):
+
+                acc = it.next(iterator_acc)
+                state = acc['State']
+                if state not in states_dict:
+                    states_dict[state] = 1
+                else:
+                    states_dict[state] = states_dict[state] + 1
+            
+            num_accidents_in_day =  lt.size(day_acc)
+            if num_accidents_in_day > more_accidents1:
+                more_accidents1 = num_accidents_in_day
+                winner_day1 = day
+
+        more_accidents2 = 0
+
+        iterator2 = it.newIterator(acc_in_range[2])
+        while it.hasNext(iterator2):
+
+            key_acc = it.next(iterator2)
+            year_bst = str(key_acc.year)
+            day = om.get(catalog[year_bst],key_acc)
+            day_acc = day['value']['Accidents_lst']
+        
+            iterator_acc = it.newIterator(day_acc)
+            while it.hasNext(iterator_acc):
+
+                acc = it.next(iterator_acc)
+                state = acc['State']
+                if state not in states_dict:
+                    states_dict[state] = 1
+                else:
+                    states_dict[state] = states_dict[state] + 1
+
+            num_accidents_in_day =  lt.size(day_acc)
+            if num_accidents_in_day > more_accidents2:
+                more_accidents2 = num_accidents_in_day
+                winner_day2 = day
+
+        if more_accidents1 > more_accidents2:
+            winner_day = winner_day1
+        else:
+            winner_day = winner_day2
+    
+        max_state = 0
+        states_dict_keys = states_dict.keys()
+        for state in states_dict_keys:
+            num_acc_state = states_dict[state]
+            if num_acc_state > max_state:
+                max_state = num_acc_state
+                winner_state = state
+
+    return winner_state , states_dict[winner_state] , winner_day 
+
+# ==============================
+# Funciones para consultar tamaño y altura de los árboles/mapas.
+# ==============================
 
 def yearsSize(catalog):
     """
@@ -335,12 +442,14 @@ def compareSeverity(sev_accident1,sev_accident2):
     else:
         return -1
 
-def compareStatesNames(state1,state2):
+def compareStatesNames(keyname,state):
     """
     Compara dos nombres de Estados.
+    Compara el nombre del Estado con una entry en 
+    el mapa (Hash Table). Requiere obtener la llave del entry.
     """
-    state1 = str(state1)
-    state2 = str(state2)
+    state1 = str(keyname)
+    state2 = me.getKey(state)
     if (state1 == state2):
         return 0
     elif (state1 > state2):

@@ -43,9 +43,9 @@ operación seleccionada.
 # ___________________________________________________
 
 
-accidentsFile = 'Accidents/us_accidents_small.csv'
+#accidentsFile = 'Accidents/us_accidents_small.csv'
 #accidentsFile = 'Accidents/US_Accidents_Dec19.csv'
-#accidentsFile = 'Accidents/us_accidents_dis_2016.csv'
+accidentsFile = 'Accidents/us_accidents_dis_2016.csv'
 
 
 # ___________________________________________________
@@ -61,7 +61,7 @@ def printData(cont):
     """ 
     print('Accidentes cargados: ' + str(controller.accidentsSize(cont)))
     print('Fechas en las que ocurrieron accidentes cargadas: ' + str(controller.yearsSize(cont)))
-    print('Estados cargados: ' + str(controller.statesSize(cont)))
+#    print('Estados cargados: ' + str(controller.statesSize(cont)))
 
     print('\nFechas en las que ocurrieron accidentes en 2016: ' + str(controller.eachYearSize(cont)[0]))
     print('Altura árbol 2016: ' + str(controller.eachYearHeight(cont)[0]))
@@ -144,6 +144,7 @@ def printAccidentsInRange(catalog,initial_date,final_date,accidents_in_range):
 
         iterator = it.newIterator(accidents_in_range[1])
         while it.hasNext(iterator):
+
             key_acc = it.next(iterator)
             year_bst = str(key_acc.year)
             day = om.get(catalog[year_bst],key_acc)
@@ -242,12 +243,12 @@ def printMenu():
     print("*******************************************")
     print("Bienvenido")
     print("1- Inicializar Analizador")
-    print("2- Cargar información de accidentes")
+    print("2- Cargar información de accidentes.")
     print("3- Requerimento 1: Conocer los accidentes en una fecha.")
     print("4- Requerimento 2: Conocer los accidentes anteriores a una fecha.")
     print("5- Requerimento 3: Conocer los accidentes en un rango de fechas.")
-    print("6- Requerimento 4: Conocer el Estado con más accidentes.")
-#    print("7- Requerimento 5: Conocer los accidentes por rango de horas.")
+    print("6- Requerimento 4: Conocer el Estado con más accidentes en un rango de fechas.")
+    print("7- Requerimento 5: Conocer los accidentes por rango de horas.")
 #    print("8- Requerimento 6: Conocer la zona geográfica más accidentada.")
 #    print("9- Requerimento 7: ")
     print("0- Salir")
@@ -290,8 +291,11 @@ while True:
         printAccidentsInRange(cont,initial_date,final_date,accidents_in_range)
     elif int(inputs[0]) == 6:
         print("\nRequerimiento No 4 del reto 3: ")
-        state = controller.getStateWithMoreAccidents(cont)
-        print("El estado con más accidentes es: ", str(state))
+        initial_date = input("\nIngrese el límite inferior del rango de fechas (YYYY-MM-DD):")
+        final_date = input("\nIngrese el límite superior del rango de fechas (YYYY-MM-DD):")
+        return_tuple = controller.getStateWithMoreAccidents(cont,initial_date,final_date)
+        print("El estado con más accidentes es: " + str(return_tuple[0]) + ". Con: " + str(return_tuple[1]) + " accidentes.")
+        print("El día en el que se presentaron más accidentes en el rango ingresado fue: " + str((return_tuple[2])['key']) + ". Con: " + str(lt.size((return_tuple[2])['value']['Accidents_lst'])) + " accidentes.")
 #    elif int(inputs[0]) == 7:
 #        print("\nRequerimiento No 5 del reto 3: ")
 #    elif int(inputs[0]) == 8:

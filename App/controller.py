@@ -56,14 +56,10 @@ def loadData(catalog, accidentsfile):
     accidentsfile = cf.data_dir + accidentsfile
     input_file = csv.DictReader(open(accidentsfile, encoding="utf-8"),
                                 delimiter=",")
-    cont = 0
     for accident in input_file:
         model.addAccident(catalog,accident)
-        model.addAccidentToState(catalog,accident)
-        cont = cont + 1
-        if cont == 10:
-            break
-    
+#        model.addAccidentToState(catalog,accident)
+  
 # ___________________________________________________
 #  Funciones para consultas
 # ___________________________________________________
@@ -100,14 +96,21 @@ def getAccidentsInRange(catalog,initial_date,final_date):
     final_date = datetime.datetime.strptime(final_date, '%Y-%m-%d')
     return model.getAccidentsInRange(catalog,initial_date.date(),final_date.date())
 
-def getStateWithMoreAccidents(catalog):
+def getStateWithMoreAccidents(catalog,initial_date,final_date):
     """
     RETO3 - REQ4
     Llama la función en model que retorna
-    el Estado con más accidentes reportados.
-    """    
-    return model.getStateWithMoreAccidents(catalog)
+    el Estado con más accidentes reportados en un rango
+    de fechas.
+    """   
+    initial_date = datetime.datetime.strptime(initial_date, '%Y-%m-%d')
+    final_date = datetime.datetime.strptime(final_date, '%Y-%m-%d') 
+    return model.getStateWithMoreAccidents(catalog,initial_date.date(),final_date.date())
 
+
+# ==============================
+# Funciones para consultar tamaño y altura de los árboles/mapas.
+# ==============================
 def yearsSize(catalog):
     """
     Llama la función en model que retorna

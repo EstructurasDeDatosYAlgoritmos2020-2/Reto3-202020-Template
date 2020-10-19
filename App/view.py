@@ -289,6 +289,7 @@ while True:
         final_date = input("\nIngrese el límite superior del rango de fechas (YYYY-MM-DD):")
         accidents_in_range = controller.getAccidentsInRange(cont,initial_date,final_date)
         printAccidentsInRange(cont,initial_date,final_date,accidents_in_range)
+
     elif int(inputs[0]) == 6:
         print("\nRequerimiento No 4 del reto 3: ")
         initial_date = input("\nIngrese el límite inferior del rango de fechas (YYYY-MM-DD):")
@@ -296,8 +297,13 @@ while True:
         return_tuple = controller.getStateWithMoreAccidents(cont,initial_date,final_date)
         print("El estado con más accidentes es: " + str(return_tuple[0]) + ". Con: " + str(return_tuple[1]) + " accidentes.")
         print("El día en el que se presentaron más accidentes en el rango ingresado fue: " + str((return_tuple[2])['key']) + ". Con: " + str(lt.size((return_tuple[2])['value']['Accidents_lst'])) + " accidentes.")
-#    elif int(inputs[0]) == 7:
-#        print("\nRequerimiento No 5 del reto 3: ")
+  
+    elif int(inputs[0]) == 7:
+        print("\nRequerimiento No 5 del reto 3: ")
+        initial_hour = input("\nIngrese el límite inferior del rango de horas (HH-MM):")
+        final_hour = input("\nIngrese el límite superior del rango de horas (HH-MM):")
+        accidents_in_range = controller.getAccidentsInHourRange(cont,initial_hour,final_hour)
+
 #    elif int(inputs[0]) == 8:
 #        print("\nRequerimiento No 6 del reto 3: ")
 #    elif int(inputs[0]) == 9:

@@ -59,7 +59,7 @@ def loadData(catalog, accidentsfile):
     for accident in input_file:
         model.addAccident(catalog,accident)
 #        model.addAccidentToState(catalog,accident)
-  
+        model.newHourRBT(catalog,accident)
 # ___________________________________________________
 #  Funciones para consultas
 # ___________________________________________________
@@ -107,7 +107,16 @@ def getStateWithMoreAccidents(catalog,initial_date,final_date):
     final_date = datetime.datetime.strptime(final_date, '%Y-%m-%d') 
     return model.getStateWithMoreAccidents(catalog,initial_date.date(),final_date.date())
 
-
+def getAccidentsInHourRange(catalog,initial_hour,final_hour):
+    """
+    RETO3 - REQ5
+    Llama la función en model que retorna
+    los accidentes dado un rango de horas.
+    """       
+    initial_hour = datetime.datetime.strptime(initial_hour,'%H:%M')
+    final_hour = datetime.datetime.strptime(initial_hour,'%H:%M')
+    
+    return model.getAccidentsInHourRange(catalog,initial_hour.hour(),final_hour.hour())
 # ==============================
 # Funciones para consultar tamaño y altura de los árboles/mapas.
 # ==============================

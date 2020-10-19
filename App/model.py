@@ -61,7 +61,9 @@ def newCatalog():
     catalog['2019'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
     catalog['2020'] = om.newMap(omaptype='RBT',
-                                      comparefunction=compareDates)    
+                                      comparefunction=compareDates)   
+    catalog['Hour_RBT'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareHours)   
 #    catalog['States'] = m.newMap(55,maptype='PROBING',
 #                                    loadfactor=0.5,
 #                                    comparefunction=compareStatesNames)                              
@@ -70,6 +72,16 @@ def newCatalog():
 # ==============================
 # Funciones para agregar informacion al catalogo
 # ==============================
+
+def newHourRBT(catalog,accident):
+    """
+    RETO3 - REQ5
+    Crea un nuevo RBT en el catálogo organizado por horas.
+    """
+    occurred_start_date = accident['Start_Time']
+    if occurred_start_date is not None:
+        updateAccidentInHour(catalog,accident)
+
 
 def addAccident(catalog,accident):
     """
@@ -82,14 +94,10 @@ def addAccident(catalog,accident):
 
         accident_date = datetime.datetime.strptime(occurred_start_date, '%Y-%m-%d %H:%M:%S')
         ocurred_year = str(accident_date.year)
-    
         lt.addLast(catalog['accidents'],accident)
-        uptadeAccidentInDate(catalog[ocurred_year],accident) 
-    
-    return catalog 
+        updateAccidentInDate(catalog[ocurred_year],accident) 
 
-
-def uptadeAccidentInDate(year_map,accident):
+def updateAccidentInDate(year_map,accident):
     """
     Se toma la fecha del accidente y se busca si ya existe en el arbol
     dicha fecha. Si es asi, se adiciona a su lista de accidentes
@@ -104,13 +112,28 @@ def uptadeAccidentInDate(year_map,accident):
 
     if entry is None:
         date_entry = newDateEntry()
-        
         om.put(year_map,acc_date.date(),date_entry)  
     else:
         date_entry = me.getValue(entry)
-    
     addSeverityToDateEntry(date_entry,accident)
-    return year_map
+
+def updateAccidentInHour(catalog,accident):
+
+    ocurred_date = accident['Start_Time']
+    acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
+   
+    entry = om.get(catalog['Hour_RBT'],acc_date.time())
+
+    if entry is None:
+        hour_entry = newHouEntry()
+        om.put(catalog['Hour_RBT'],acc_date.time(),hour_entry)
+    else:
+        hour_entry = me.getValue(entry)
+        newHourRBT
+    
+
+
+
 
 def addSeverityToDateEntry(date_entry,accident):
     """
@@ -132,7 +155,6 @@ def addSeverityToDateEntry(date_entry,accident):
         lt.addLast(severity_entry['ListBySeverity'],accident)
     
     return date_entry
-
 
 #def addAccidentToState(catalog,accident):
 #    """
@@ -354,6 +376,16 @@ def getStateWithMoreAccidents(catalog,initial_date,final_date):
 
     return winner_state , states_dict[winner_state] , winner_day 
 
+def getAccidentsInHourRange(catalog,initial_hour,final_hour):
+    """
+    RETO3 - REQ5
+    Retorna los accidentes dado un rango de horas.
+    """ 
+    years = [ 2016, 2017, 2018, 2019, 2020 ]
+    for year in years:
+        if not om.isEmpty(catalog[year]):
+
+
 # ==============================
 # Funciones para consultar tamaño y altura de los árboles/mapas.
 # ==============================
@@ -456,3 +488,15 @@ def compareStatesNames(keyname,state):
         return 1
     else:
         return -1
+
+def compareHours(hour1,hour2):
+    """
+    Compara dos horas de accidentes.
+    """
+    if (hour1 == hour2):
+        return 0
+    elif (hour1 > hour2):
+        return 1
+    else:
+        return -1
+    

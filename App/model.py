@@ -117,10 +117,10 @@ def updateAccidentInHour(hour_RBT,accident):
     """
     ocurred_date = accident['Start_Time']
     acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
-    print('1 ',datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S'))
-    print('2 ',acc_date.time())
-    print('3',datetime.time(ocurred_date, '%Y-%m-%d %H:%M:%S') )
-    print('4', datetime.datetime(ocurred_date, '%Y-%m-%d %H:%M:%S'))
+#    print('1 ',datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S'))
+#    print('2 ',acc_date.time())
+#    print('3',datetime.time(ocurred_date, '%Y-%m-%d %H:%M:%S') )
+#    print('4', datetime.datetime(ocurred_date, '%Y-%m-%d %H:%M:%S'))
     
     entry = om.get(hour_RBT,acc_date.time())
 

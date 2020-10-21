@@ -62,8 +62,8 @@ def printData(cont):
     print('Accidentes cargados: ' + str(controller.accidentsSize(cont)))
     print('Fechas en las que ocurrieron accidentes cargadas: ' + str(controller.yearsSize(cont)))
 
-    print('HH:MM cargados: ' + str(controller.hoursSize(cont)))
-    print('Altura del árbol HH:MM: ' + str(controller.hourHeight(cont)))
+    print('Horas :00 y :30 en las que ocurrieron accidentes cargadas: ' + str(controller.hoursSize(cont)))
+    print('Altura del árbol de Horas: ' + str(controller.hourHeight(cont)))
 
     print('\nFechas en las que ocurrieron accidentes en 2016: ' + str(controller.eachYearSize(cont)[0]))
     print('Altura árbol 2016: ' + str(controller.eachYearHeight(cont)[0]))
@@ -87,7 +87,7 @@ def printAccidentsByDate(accidents_by_date,search_date):
     """
     if accidents_by_date:
         print('En el día: ' + search_date)
-        print('Ocurrieron un total de: ' + str((m.size(accidents_by_date['Accidents_lst']))) + " accidentes.")
+        print('Ocurrieron un total de: ' + str((lt.size(accidents_by_date['Accidents_lst']))) + " accidentes.")
 
         Map_Severity = accidents_by_date['Severities_mp']['table']['elements']
         for severity in Map_Severity:
@@ -103,7 +103,7 @@ def printAccidentsByDate(accidents_by_date,search_date):
                     print('ID: ' +  str(acc['ID']) +  '  Datos Fecha: '+ str(date_time.ctime()) + '    '+ str(acc['Description']))
     else:
         print(accidents_by_date)
-        print('No se encontraron accidentes en la fecha ingresada o la fecha ingresada no se encuentra entre los años 2016-2019.')
+        print('No se encontraron accidentes en la fecha ingresada.')
 
 def printAccidentsBeforeDare(accidents_before,search,catalog):
     """
@@ -234,6 +234,16 @@ def printAccidentsInRange(catalog,initial_date,final_date,accidents_in_range):
     else:
         print('Una o ambas fechas ingresadas no son válidas.')
 
+
+def printStateWithMoreAccidentsInRange(return_tuple):
+    """
+    RETO3 - REQ4
+    Imprime el Estado con más accidentes en un rango dado.
+    """
+    print("El estado con más accidentes es: " + str(return_tuple[0]) + ". Con: " + str(return_tuple[1]) + " accidentes.")
+    print("El día en el que se presentaron más accidentes en el rango ingresado fue: " + str((return_tuple[2])['key']) + ". Con: " + str(lt.size((return_tuple[2])['value']['Accidents_lst'])) + " accidentes.")
+  
+
 def printAccidentsInHourRange(cont,accidents_in_range):
     """
     RETO3 - REQ5 
@@ -241,13 +251,21 @@ def printAccidentsInHourRange(cont,accidents_in_range):
     """
     if accidents_in_range is not None:
 
-        total = 0
-        iterator = it.newIterator(accidents_in_range)
-        while it.hasNext(iterator):
-            
-            key_acc = it.next(iterator)
-            
-            break
+        map_Severity = accidents_in_range['Severities_mp']['table']['elements']
+        for severity in Map_Severity:
+            severity_lvl = me.getValue(severity)
+        
+            if severity_lvl is not None:
+                iterator = it.newIterator(severity_lvl['ListBySeverity'])
+                print('\nHubieron: '+ str(lt.size(severity_lvl['ListBySeverity'])) + ' accidentes con Nivel de Gravedad: ' + str(severity_lvl['Severity']))
+        
+                cont = 0
+                while it.hasNext(iterator) and cont < 3:
+                    cont = cont + 1
+                    acc = it.next(iterator)
+                    date_time = datetime.datetime.strptime(acc['Start_Time'], '%Y-%m-%d %H:%M:%S')
+                    print('ID: ' +  str(acc['ID']) +  '  Datos Fecha: '+ str(date_time.ctime()) + '    '+ str(acc['Description']))
+
 
     else:
         print('Una o ambas fechas ingresadas no son válidas')
@@ -311,17 +329,17 @@ while True:
 
     elif int(inputs[0]) == 6:
         print("\nRequerimiento No 4 del reto 3: ")
-        initial_date = input("\nIngrese el límite inferior del rango de fechas (YYYY-MM-DD):")
-        final_date = input("\nIngrese el límite superior del rango de fechas (YYYY-MM-DD):")
+        initial_date = input("\nIngrese el límite inferior del rango de fechas (YYYY-MM-DD): ")
+        final_date = input("\nIngrese el límite superior del rango de fechas (YYYY-MM-DD): ")
         return_tuple = controller.getStateWithMoreAccidents(cont,initial_date,final_date)
-        print("El estado con más accidentes es: " + str(return_tuple[0]) + ". Con: " + str(return_tuple[1]) + " accidentes.")
-        print("El día en el que se presentaron más accidentes en el rango ingresado fue: " + str((return_tuple[2])['key']) + ". Con: " + str(lt.size((return_tuple[2])['value']['Accidents_lst'])) + " accidentes.")
+        printStateWithMoreAccidentsInRange(return_tuple)
   
     elif int(inputs[0]) == 7:
         print("\nRequerimiento No 5 del reto 3: ")
-        initial_hour = input("\nIngrese el límite inferior del rango de horas (HH-MM):")
-        final_hour = input("\nIngrese el límite superior del rango de horas (HH-MM):")
+        initial_hour = str(input("\nIngrese el límite inferior del rango de horas (HH-MM): "))
+        final_hour = str(input("\nIngrese el límite superior del rango de horas (HH-MM): "))
         accidents_in_range = controller.getAccidentsInHourRange(cont,initial_hour,final_hour)
+        printAccidentsInHourRange(cont,accidents_in_range)
 
 #    elif int(inputs[0]) == 8:
 #        print("\nRequerimiento No 6 del reto 3: ")

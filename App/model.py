@@ -116,22 +116,34 @@ def updateAccidentInHour(hour_RBT,accident):
         Se actualiza la lista de accidentes ocurridos en esa hora.
     """
     ocurred_date = accident['Start_Time']
+
     acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
-#    print('1 ',datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S'))
-#    print('2 ',acc_date.time())
-#    print('3',datetime.time(ocurred_date, '%Y-%m-%d %H:%M:%S') )
-#    print('4', datetime.datetime(ocurred_date, '%Y-%m-%d %H:%M:%S'))
+    acc_time = datetime.timedelta(hours=acc_date.hour, minutes = acc_date.minute)
+    acc_minutes = datetime.timedelta(minutes=acc_date.minute)
+
+    fifteen_minutes = datetime.timedelta(minutes=15)
+
+    if acc_minutes == 00:
+        rbt_accident_time = acc_time
+
+    elif acc_minutes <= fifteen_minutes:
+        rbt_accident_time = datetime.timedelta(hours=acc_date.hour, minutes = 00)
+
+    elif acc_minutes >= fifteen_minutes and acc_minutes <= (fifteen_minutes)*3:
+        rbt_accident_time = datetime.timedelta(hours=acc_date.hour, minutes = 30)
     
-    entry = om.get(hour_RBT,acc_date.time())
+    elif acc_minutes > (fifteen_minutes)*3:
+        rbt_accident_time = datetime.timedelta(hours=(acc_date.hour + 1 ), minutes = 00)
+
+    entry = om.get(hour_RBT,rbt_accident_time)
 
     if entry is None:
-        hour_entry = newHourEntry(acc_date.time())
-        om.put(hour_RBT,acc_date.time(),hour_entry)
+        hour_entry = newHourEntry(acc_date)
+        om.put(hour_RBT,rbt_accident_time,hour_entry)
     else:
         hour_entry = me.getValue(entry)
 
     addSeverityToEntry(hour_entry,accident)
-
 
 def addSeverityToEntry(entryRBT,accident):
     """
@@ -369,9 +381,42 @@ def getAccidentsInHourRange(catalog,initial_hour,final_hour):
     RETO3 - REQ5
     Retorna los accidentes dado un rango de horas.
     """ 
+
+    acc_time1 = datetime.timedelta(hours=initial_hour.hour, minutes = initial_hour.minute)
+    acc_minutes1 = datetime.timedelta(minutes=initial_hour.minute)
+    fifteen_minutes = datetime.timedelta(minutes=15)
+    
+    if acc_minutes1 == 00:
+        rbt_initial_time = acc_time1
+
+    elif acc_minutes1 <= fifteen_minutes:
+        rbt_initial_time = datetime.timedelta(hours=initial_hour.hour, minutes = 00)
+
+    elif acc_minutes1 >= fifteen_minutes and acc_minutes1 <= (fifteen_minutes)*3:
+        rbt_initial_time = datetime.timedelta(hours=initial_hour.hour, minutes = 30)
+    
+    elif acc_minute1 > (fifteen_minutes)*3:
+        rbt_initial_time = datetime.timedelta(hours=(initial_hour.hour + 1 ), minutes = 00)
+
+
+    acc_time2 = datetime.timedelta(hours=final_hour.hour, minutes = final_hour.minute)
+    acc_minutes2 = datetime.timedelta(minutes=final_hour.minute)
+
+    if acc_minutes2 == 00:
+        rbt_final_hour = acc_time2
+
+    elif acc_minutes2 <= fifteen_minutes:
+        rbt_accident_time = datetime.timedelta(hours=final_hour.hour, minutes = 00)
+
+    elif acc_minutes2 >= fifteen_minutes and acc_minutes2 <= (fifteen_minutes)*3:
+        rbt_final_hour = datetime.timedelta(hours=final_hour.hour, minutes = 30)
+    
+    elif acc_minutes2 > (fifteen_minutes)*3:
+        rbt_final_hour = datetime.timedelta(hours=(final_hour.hour + 1 ), minutes = 00)
+
     Hour_RBT = catalog['Hour_RBT']
     if initial_hour != None and final_hour != None:
-        return om.values(Hour_RBT,initial_hour,final_hour)
+        return om.values(Hour_RBT,rbt_initial_time,rbt_final_hour)
     return None
 
 # ==============================
@@ -486,13 +531,13 @@ def compareStatesNames(keyname,state):
     else:
         return -1
 
-def compareHours(hour1,hour2):
+def compareHours(time1,time2):
     """
     Compara dos horas de accidentes.
     """
-    if (hour1 == hour2):
+    if (time1 == time2):
         return 0
-    elif (hour1 > hour2):
+    elif (time1 > time2):
         return 1
     else:
         return -1

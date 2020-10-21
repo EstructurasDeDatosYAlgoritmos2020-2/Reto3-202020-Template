@@ -58,7 +58,6 @@ def loadData(catalog, accidentsfile):
                                 delimiter=",")
     for accident in input_file:
         model.addAccident(catalog,accident)
-        model.newHourRBT(catalog,accident)
 # ___________________________________________________
 #  Funciones para consultas
 # ___________________________________________________
@@ -112,8 +111,13 @@ def getAccidentsInHourRange(catalog,initial_hour,final_hour):
     Llama la función en model que retorna
     los accidentes dado un rango de horas.
     """       
-    initial_hour = datetime.datetime.strptime(initial_hour,'%H:%M')
-    final_hour = datetime.datetime.strptime(initial_hour,'%H:%M')
+    initial_hour = datetime.time(initial_hour,'%H:%M')
+    final_hour = datetime.time(initial_hour,'%H:%M')
+
+    
+    print(initial_hour)
+        
+    
     
     return model.getAccidentsInHourRange(catalog,initial_hour.hour(),final_hour.hour())
 # ==============================
@@ -126,6 +130,14 @@ def yearsSize(catalog):
     los años.
     """    
     return model.yearsSize(catalog)
+
+def hoursSize(catalog):
+    """
+    Llama la función en el model que
+    retorna el número de HH:MM en las que ocurrieron
+    accidentes.
+    """
+    return model.hoursSize(catalog)
 
 def accidentsSize(catalog):
     """
@@ -149,10 +161,10 @@ def eachYearHeight(catalog):
     """    
     return model.eachYearHeight(catalog)    
 
-def statesSize(catalog):
+def hourHeight(catalog):
     """
-    RETO3 - REQ4
-    Llama la función en model que retorna
-    el número de Estados cargados.
+    Llama a la función en el model 
+    que retorna la altura del árbol de 
+    horas.
     """
-    return model.statesSize(catalog)
+    return model.hourHeight(catalog)

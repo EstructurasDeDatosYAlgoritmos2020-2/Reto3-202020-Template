@@ -101,10 +101,8 @@ def updateAccidentInDate(year_RBT,accident):
     entry = om.get(year_RBT,acc_date.date())
 
     if entry is None:
-        print("Hola")
         date_entry = newDateEntry()
-        om.put(year_RBT,acc_date.date(),date_entry)  
-        print(date_entry)
+        om.put(year_RBT,acc_date.date(),date_entry)     
     else:
         date_entry = me.getValue(entry)
     addSeverityToEntry(date_entry,accident)
@@ -119,6 +117,11 @@ def updateAccidentInHour(hour_RBT,accident):
     """
     ocurred_date = accident['Start_Time']
     acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
+    print('1 ',datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S'))
+    print('2 ',acc_date.time())
+    print('3',datetime.time(ocurred_date, '%Y-%m-%d %H:%M:%S') )
+    print('4', datetime.datetime(ocurred_date, '%Y-%m-%d %H:%M:%S'))
+    
     entry = om.get(hour_RBT,acc_date.time())
 
     if entry is None:
@@ -130,7 +133,7 @@ def updateAccidentInHour(hour_RBT,accident):
     addSeverityToEntry(hour_entry,accident)
 
 
-def addSeverityToEntry(entry,accident):
+def addSeverityToEntry(entryRBT,accident):
     """
     Añade un accidente a la lista de accidentes de la entry (Fecha u Hora, depende del árbol).
     
@@ -140,19 +143,18 @@ def addSeverityToEntry(entry,accident):
     Valor: Lista con los accidentes de dicha severidad)
 
     """
-    lt.addLast(entry['Accidents_lst'],accident)
+    lt.addLast(entryRBT['Accidents_lst'],accident)
     severity = accident['Severity']
-    entry = m.get(entry['Severities_mp'], severity)
+    entry_sev_mp = m.get(entryRBT['Severities_mp'], severity)
 
-    if entry is None:
+    if entry_sev_mp is None:
         severity_entry = newSeverityEntry(accident)
         lt.addLast(severity_entry['ListBySeverity'],accident)
-        print('1',entry['Severities_mp'] )
-        print('2',severity)
-        print('3', severity_entry)
-        m.put(entry['Severities_mp'] , severity, severity_entry)
+
+        m.put(entryRBT['Severities_mp'] , severity, severity_entry)
     else:
-        severity_entry = me.getValue(entry)
+
+        severity_entry = me.getValue(entry_sev_mp)
         lt.addLast(severity_entry['ListBySeverity'],accident)
     
 
@@ -173,7 +175,7 @@ def newDateEntry():
     entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
     return entry
 
-def newHouEntry(hour):
+def newHourEntry(hour):
     """
     RETO3 - REQ5
     Crea una entry en el árbol de horas. Con:
@@ -196,6 +198,7 @@ def newSeverityEntry(accident):
     severity_entry = {'Severity': None, 'ListBySeverity': None}
     severity_entry['Severity'] = accident['Severity']
     severity_entry['ListBySeverity'] = lt.newList('SINGLE_LINKED', compareSeverity)
+
     return severity_entry
 
 # ==============================
@@ -385,6 +388,11 @@ def yearsSize(catalog):
     y4=om.size(catalog['2019'])
     
     return y1 + y2 + y3 +y4
+def hoursSize(catalog):
+    """
+    Número de HH:MM en las que ocurrieron accidentes.
+    """
+    return om.size(catalog['Hour_RBT'])
 def accidentsSize(catalog):
     """
     Número de accidentes.
@@ -419,7 +427,11 @@ def eachYearHeight(catalog):
     y5 = y4=om.height(catalog['2020'])
 
     return y1, y2, y3, y4 , y5
-
+def hourHeight(catalog):
+    """
+    Altura del árbol de horas.
+    """
+    return om.height(catalog['Hour_RBT'])
 # ==============================
 # Funciones de Comparacion
 # ==============================

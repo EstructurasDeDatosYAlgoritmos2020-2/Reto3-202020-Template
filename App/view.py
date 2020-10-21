@@ -62,6 +62,8 @@ def printData(cont):
     print('Accidentes cargados: ' + str(controller.accidentsSize(cont)))
     print('Fechas en las que ocurrieron accidentes cargadas: ' + str(controller.yearsSize(cont)))
 
+    print('HH:MM cargados: ' + str(controller.hoursSize(cont)))
+    print('Altura del árbol HH:MM: ' + str(controller.hourHeight(cont)))
 
     print('\nFechas en las que ocurrieron accidentes en 2016: ' + str(controller.eachYearSize(cont)[0]))
     print('Altura árbol 2016: ' + str(controller.eachYearHeight(cont)[0]))

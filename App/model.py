@@ -38,8 +38,8 @@ es decir contiene los modelos con los datos en memoria
 # -----------------------------------------------------
 
 def newCatalog():
-    """ Inicializa el catálogo
-
+    """ 
+    Inicializa el catálogo
     Retorna el catálogo inicializado.
     """
     catalog = {'accidents': None,
@@ -47,11 +47,11 @@ def newCatalog():
                 '2017': None,
                 '2018': None,
                 '2019': None,
-                '2020': None
+                '2020': None,
+                'Hour_RBT':None
                 }
 
     catalog['accidents'] = lt.newList('ARRAY_LIST',compareAccidentsID)
-#    catalog['years'] = lt.newList('SINGLE_LINKED', )
     catalog['2016'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
     catalog['2017'] = om.newMap(omaptype='RBT',
@@ -87,46 +87,46 @@ def addAccident(catalog,accident):
         ocurred_year = str(accident_date.year)
         lt.addLast(catalog['accidents'],accident)
         updateAccidentInDate(catalog[ocurred_year],accident) 
-        updateAccidentInHour(catalog,accident)
+        updateAccidentInHour(catalog['Hour_RBT'],accident)
 
-def updateAccidentInDate(year_map,accident):
+def updateAccidentInDate(year_RBT,accident):
     """
     Adiciona la fecha de un accidente como llave a su respectivo año de ocurrencia (RBT).
     Actualiza el entry en el caso de que la fecha ya exista:
         Se actualiza el mapa de severidades.
         Se actualiza la lista de accidentes en la fecha.
-
     """
     ocurred_date = accident['Start_Time']
     acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
-    entry = om.get(year_map,acc_date.date())
+    entry = om.get(year_RBT,acc_date.date())
 
     if entry is None:
+        print("Hola")
         date_entry = newDateEntry()
-        om.put(year_map,acc_date.date(),date_entry)  
+        om.put(year_RBT,acc_date.date(),date_entry)  
+        print(date_entry)
     else:
         date_entry = me.getValue(entry)
-    addSeverityToDateEntry(date_entry,accident)
+    addSeverityToEntry(date_entry,accident)
 
-def updateAccidentInHour(catalog,accident):
+def updateAccidentInHour(hour_RBT,accident):
     """
     RETO3 - REQ5
-    Aciona la hora en la que ocurrió un accidente como llave al RBT.
+    Adiciona la hora en la que ocurrió un accidente como llave al RBT.
     Actualiza el entry en el caso de que la hora ya exista:
         Se actualiza el mapa de severidades.
         Se actualiza la lista de accidentes ocurridos en esa hora.
     """
     ocurred_date = accident['Start_Time']
     acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
-   
-    entry = om.get(catalog['Hour_RBT'],acc_date.time())
+    entry = om.get(hour_RBT,acc_date.time())
 
     if entry is None:
-        hour_entry = newHouEntry()
-        om.put(catalog['Hour_RBT'],acc_date.time(),hour_entry)
+        hour_entry = newHourEntry(acc_date.time())
+        om.put(hour_RBT,acc_date.time(),hour_entry)
     else:
         hour_entry = me.getValue(entry)
-     
+
     addSeverityToEntry(hour_entry,accident)
 
 
@@ -147,31 +147,23 @@ def addSeverityToEntry(entry,accident):
     if entry is None:
         severity_entry = newSeverityEntry(accident)
         lt.addLast(severity_entry['ListBySeverity'],accident)
+        print('1',entry['Severities_mp'] )
+        print('2',severity)
+        print('3', severity_entry)
         m.put(entry['Severities_mp'] , severity, severity_entry)
     else:
         severity_entry = me.getValue(entry)
         lt.addLast(severity_entry['ListBySeverity'],accident)
     
-    return entry
-
-
 
 # ==============================
 # Funciones para inicializar las entradas de los RBT o Tablas de Hash.
 # ==============================
 
-#def newState(name):
-#    """
-#    RETO3 - REQ4
-#    Adiciona un Estado al mapa de Estados.
-#    """
-#    state = {"Name": name, "Accidents": None}
-#    state['Accidents'] = lt.newList('ARRAY_LIST',compareDates)
-#    return state
 
 def newDateEntry():
     """
-    Se crea un nodo dada una fecha con sus respectivas llaves: 
+    Crea un entry dada una fecha con sus respectivas llaves: 
     Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
     """
     entry = {'Severities_mp': None, 'Accidents_lst': None}
@@ -181,6 +173,20 @@ def newDateEntry():
     entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
     return entry
 
+def newHouEntry(hour):
+    """
+    RETO3 - REQ5
+    Crea una entry en el árbol de horas. Con:
+    Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
+    """
+    entry = {'Hour': None, 'Severities_mp': None, 'Accidents_lst': None}
+  
+    entry['Severities_mp'] = m.newMap(numelements=15,
+                                     maptype='PROBING',
+                                     comparefunction=compareSeverity)
+    entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
+    return entry
+    
 def newSeverityEntry(accident):
     """
     Se crea un nuevo grado de gravedad con sus respectivas llaves:

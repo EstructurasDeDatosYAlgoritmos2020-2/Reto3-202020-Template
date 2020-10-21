@@ -61,7 +61,7 @@ def printData(cont):
     """ 
     print('Accidentes cargados: ' + str(controller.accidentsSize(cont)))
     print('Fechas en las que ocurrieron accidentes cargadas: ' + str(controller.yearsSize(cont)))
-#    print('Estados cargados: ' + str(controller.statesSize(cont)))
+
 
     print('\nFechas en las que ocurrieron accidentes en 2016: ' + str(controller.eachYearSize(cont)[0]))
     print('Altura árbol 2016: ' + str(controller.eachYearHeight(cont)[0]))
@@ -99,7 +99,6 @@ def printAccidentsByDate(accidents_by_date,search_date):
                     acc = it.next(iterator)
                     date_time = datetime.datetime.strptime(acc['Start_Time'], '%Y-%m-%d %H:%M:%S')
                     print('ID: ' +  str(acc['ID']) +  '  Datos Fecha: '+ str(date_time.ctime()) + '    '+ str(acc['Description']))
-  
     else:
         print(accidents_by_date)
         print('No se encontraron accidentes en la fecha ingresada o la fecha ingresada no se encuentra entre los años 2016-2019.')
@@ -129,7 +128,6 @@ def printAccidentsBeforeDare(accidents_before,search,catalog):
     
         print('\nAntes de la fecha ocurrieron: ' +  str(num_acc_before_date) + ' accidentes.')
         print('El día en el que se presentaron más accidentes antes de la fecha ingresada fue: '+ str(winner_day['key']) + '. Con: '+ str(lt.size(winner_day['value']['Accidents_lst'])) + ' accidentes.')
-
     else:
         print('La fecha ingresada no es válida.')
 
@@ -233,6 +231,25 @@ def printAccidentsInRange(catalog,initial_date,final_date,accidents_in_range):
 
     else:
         print('Una o ambas fechas ingresadas no son válidas.')
+
+def printAccidentsInHourRange(cont,accidents_in_range):
+    """
+    RETO3 - REQ5 
+    Imprime los accidentes en un rango de horas.
+    """
+    if accidents_in_range is not None:
+
+        total = 0
+        iterator = it.newIterator(accidents_in_range)
+        while it.hasNext(iterator):
+            
+            key_acc = it.next(iterator)
+            
+            break
+
+    else:
+        print('Una o ambas fechas ingresadas no son válidas')
+
 
 # ___________________________________________________
 #  Menu principal

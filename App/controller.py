@@ -58,7 +58,6 @@ def loadData(catalog, accidentsfile):
                                 delimiter=",")
     for accident in input_file:
         model.addAccident(catalog,accident)
-#        model.addAccidentToState(catalog,accident)
         model.newHourRBT(catalog,accident)
 # ___________________________________________________
 #  Funciones para consultas

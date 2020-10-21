@@ -64,30 +64,21 @@ def newCatalog():
                                       comparefunction=compareDates)   
     catalog['Hour_RBT'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareHours)   
-#    catalog['States'] = m.newMap(55,maptype='PROBING',
-#                                    loadfactor=0.5,
-#                                    comparefunction=compareStatesNames)                              
+                            
     return catalog
 
 # ==============================
 # Funciones para agregar informacion al catalogo
 # ==============================
 
-def newHourRBT(catalog,accident):
-    """
-    RETO3 - REQ5
-    Crea un nuevo RBT en el catálogo organizado por horas.
-    """
-    occurred_start_date = accident['Start_Time']
-    if occurred_start_date is not None:
-        updateAccidentInHour(catalog,accident)
-
 
 def addAccident(catalog,accident):
     """
-    Adiciona un accidente a la lista de accidentes.
-    Adiciona el ID de un accidente a su respectivo año de ocurrencia,
-    cuya llave es la información del accidente.
+    Adiciona un accidente a la lista de accidentes en el catálogo.
+    Adiciona la fecha de un accidente como llave a su respectivo año de ocurrencia (RBT).
+    Actualiza el entry en el caso de que la fecha ya exista:
+        Se actualiza el mapa de severidades.
+        Se actualiza la lista de accidentes en la fecha.
     """  
     occurred_start_date = accident['Start_Time']
     if occurred_start_date is not None:
@@ -96,15 +87,15 @@ def addAccident(catalog,accident):
         ocurred_year = str(accident_date.year)
         lt.addLast(catalog['accidents'],accident)
         updateAccidentInDate(catalog[ocurred_year],accident) 
+        updateAccidentInHour(catalog,accident)
 
 def updateAccidentInDate(year_map,accident):
     """
-    Se toma la fecha del accidente y se busca si ya existe en el arbol
-    dicha fecha. Si es asi, se adiciona a su lista de accidentes
-    y se añade a una tabla de hash por su severidad.
+    Adiciona la fecha de un accidente como llave a su respectivo año de ocurrencia (RBT).
+    Actualiza el entry en el caso de que la fecha ya exista:
+        Se actualiza el mapa de severidades.
+        Se actualiza la lista de accidentes en la fecha.
 
-    Si no se encuentra creado un nodo para esa fecha en el arbol
-    se crea.
     """
     ocurred_date = accident['Start_Time']
     acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
@@ -118,7 +109,13 @@ def updateAccidentInDate(year_map,accident):
     addSeverityToDateEntry(date_entry,accident)
 
 def updateAccidentInHour(catalog,accident):
-
+    """
+    RETO3 - REQ5
+    Aciona la hora en la que ocurrió un accidente como llave al RBT.
+    Actualiza el entry en el caso de que la hora ya exista:
+        Se actualiza el mapa de severidades.
+        Se actualiza la lista de accidentes ocurridos en esa hora.
+    """
     ocurred_date = accident['Start_Time']
     acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
    
@@ -129,53 +126,35 @@ def updateAccidentInHour(catalog,accident):
         om.put(catalog['Hour_RBT'],acc_date.time(),hour_entry)
     else:
         hour_entry = me.getValue(entry)
-        newHourRBT
+     
+    addSeverityToEntry(hour_entry,accident)
+
+
+def addSeverityToEntry(entry,accident):
+    """
+    Añade un accidente a la lista de accidentes de la entry (Fecha u Hora, depende del árbol).
     
+    Actualiza un entry de grado de severidad. 
+    Este indice tiene una lista de accidentes y una tabla de hash:
+    (Llave: Grado de severidad del accidente, 
+    Valor: Lista con los accidentes de dicha severidad)
 
-
-
-
-def addSeverityToDateEntry(date_entry,accident):
     """
-    Actualiza un indice de grado de severidad. Este indice tiene una lista
-    de accidentes y una tabla de hash cuya llave es el grado de severidad del
-    accidente y el valor es una lista con los accidentes de dicha severidad
-    en la fecha que se está consultando (dada por el nodo del arbol)
-    """
-    lt.addLast(date_entry['Accidents_lst'],accident)
+    lt.addLast(entry['Accidents_lst'],accident)
     severity = accident['Severity']
-    entry = m.get(date_entry['Severities_mp'], severity)
+    entry = m.get(entry['Severities_mp'], severity)
 
     if entry is None:
         severity_entry = newSeverityEntry(accident)
         lt.addLast(severity_entry['ListBySeverity'],accident)
-        m.put(date_entry['Severities_mp'] , severity, severity_entry)
+        m.put(entry['Severities_mp'] , severity, severity_entry)
     else:
         severity_entry = me.getValue(entry)
         lt.addLast(severity_entry['ListBySeverity'],accident)
     
-    return date_entry
+    return entry
 
-#def addAccidentToState(catalog,accident):
-#    """
-#    RETO3 - REQ4
-#    Crea una entrada en el mapa para cada Estado.
-#    Si la entrada ya existe, se actualizan sus datos
-#    añadiéndose el accidente a su lista.
-#    """
-#    states_mp = catalog['States']
-#    state_name = str(accident['State'])
-#    exists_state = m.contains(states_mp,state_name)
-#
-#    if exists_state:
-#        entry = m.get(states_mp,state_name)
-#        state = me.getValue(entry)
-#    else:
-#        state = newState(state_name)
-#        m.put(states_mp,state_name,state)
-#        prueba = m.contains(states_mp,state_name)
-#
-#    lt.addLast(state['Accidents'],accident)
+
 
 # ==============================
 # Funciones para inicializar las entradas de los RBT o Tablas de Hash.
@@ -381,10 +360,10 @@ def getAccidentsInHourRange(catalog,initial_hour,final_hour):
     RETO3 - REQ5
     Retorna los accidentes dado un rango de horas.
     """ 
-    years = [ 2016, 2017, 2018, 2019, 2020 ]
-    for year in years:
-        if not om.isEmpty(catalog[year]):
-
+    Hour_RBT = catalog['Hour_RBT']
+    if initial_hour != None and final_hour != None:
+        return om.values(Hour_RBT,initial_hour,final_hour)
+    return None
 
 # ==============================
 # Funciones para consultar tamaño y altura de los árboles/mapas.

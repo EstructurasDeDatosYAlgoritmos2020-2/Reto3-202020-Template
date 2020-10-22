@@ -91,9 +91,7 @@ def printAccidentsByDate(accidents_by_date,search_date):
 
         Map_Severity = accidents_by_date['Severities_mp']['table']['elements']
         for severity in Map_Severity:
-            print('Sevvvv',severity)
             severity_lvl = me.getValue(severity)
-            print('hola',me.getKey(severity))
             if severity_lvl is not None:
                 iterator = it.newIterator(severity_lvl['ListBySeverity'])
 
@@ -243,7 +241,6 @@ def printStateWithMoreAccidentsInRange(return_tuple):
     print("El estado con más accidentes es: " + str(return_tuple[0]) + ". Con: " + str(return_tuple[1]) + " accidentes.")
     print("El día en el que se presentaron más accidentes en el rango ingresado fue: " + str((return_tuple[2])['key']) + ". Con: " + str(lt.size((return_tuple[2])['value']['Accidents_lst'])) + " accidentes.")
   
-
 def printAccidentsInHourRange(catalog,accidents_in_range):
     """
     RETO3 - REQ5 
@@ -267,7 +264,6 @@ def printAccidentsInHourRange(catalog,accidents_in_range):
                 sev_num = it.next(iterator2)
                 severity_lvl = m.get(h['Severities_mp'],sev_num)['value']
 
-
                 if severity_lvl is not None:
                         if sev_num not in severities_dict:
                             severities_dict[sev_num] = lt.size(severity_lvl['ListBySeverity'])
@@ -275,15 +271,12 @@ def printAccidentsInHourRange(catalog,accidents_in_range):
                             severities_dict[sev_num]  = severities_dict[sev_num]  + lt.size(severity_lvl['ListBySeverity'])
 
         for sev in severities_dict:
-            
             print('\nHubieron: '+ str(severities_dict[sev] ) + ' accidentes con Nivel de Gravedad: ' + str(sev))
             print('Representan un: ' + str( round(((severities_dict[sev]*100)/total_accidents ),2)) + " % del total de accidentes.")
 
         print('\nOcurrieron un total de: ' + str(total_accidents) + " accidentes en el rango de horas ingresado.")
-
     else:
         print('Una o ambas fechas ingresadas no son válidas')
-
 
 # ___________________________________________________
 #  Menu principal

@@ -95,7 +95,7 @@ def printAccidentsByDate(accidents_by_date,search_date):
             if severity_lvl is not None:
                 iterator = it.newIterator(severity_lvl['ListBySeverity'])
 
-                print('\nAccidentes con Nivel de Gravedad: ' + str(severity_lvl['Severity']))
+                print('\nAccidentes con Nivel de Gravedad: ' + str(severity_lvl['Severity']) +' (' +str(lt.size(severity_lvl['ListBySeverity'])) + ')')
                 while it.hasNext(iterator):
                     acc = it.next(iterator)
                     date_time = datetime.datetime.strptime(acc['Start_Time'], '%Y-%m-%d %H:%M:%S')
@@ -124,123 +124,35 @@ def printAccidentsBeforeDare(accidents_before,search,catalog):
 
             if num_accidents_in_day > more_accidents:
                 more_accidents = num_accidents_in_day
-                winner_day = day
+                more_accidents_day = day
     
         print('\nAntes de la fecha ocurrieron: ' +  str(num_acc_before_date) + ' accidentes.')
-        print('El día en el que se presentaron más accidentes antes de la fecha ingresada fue: '+ str(winner_day['key']) + '. Con: '+ str(lt.size(winner_day['value']['Accidents_lst'])) + ' accidentes.')
+        print('El día en el que se presentaron más accidentes antes de la fecha ingresada fue: '+ str(more_accidents_day['key']) + '. Con: '+ str(lt.size(more_accidents_day['value']['Accidents_lst'])) + ' accidentes.')
     else:
         print('La fecha ingresada no es válida.')
 
-def printAccidentsInRange(catalog,initial_date,final_date,accidents_in_range):
+def printAccidentsInRange(return_tuple,initial_date,final_date):
     """
     RETO3 - REQ3
     Imprime los accidentes en un rango de fechas.
-    """  
-    categories_dict = {}
-    if accidents_in_range[0] == 0:
-        num_acc_in_range = 0 
-
-        iterator = it.newIterator(accidents_in_range[1])
-        while it.hasNext(iterator):
-
-            key_acc = it.next(iterator)
-            
-            day = om.get(catalog[str(key_acc.year)],key_acc)
-            acc_lst = day['value']['Accidents_lst']
-
-            num_accidents_in_day =  lt.size(acc_lst)
-            num_acc_in_range = num_acc_in_range + num_accidents_in_day
-            
-            iterator_sev = it.newIterator(acc_lst)
-            while it.hasNext(iterator_sev):
-                acc = it.next(iterator_sev)
-                acc_category = acc['Severity']
-
-                if acc_category not in categories_dict:
-                    categories_dict[acc_category] = 1
-                else:
-                    categories_dict[acc_category] = categories_dict[acc_category] + 1
-  
-        max_sev = 0
-        categories_dict_keys = categories_dict.keys()
-        for sev in categories_dict_keys:
-            acc_number_sev = categories_dict[sev]
-            if acc_number_sev > max_sev:
-                max_sev = acc_number_sev
-                more_acc_by_category = ( sev , acc_number_sev )
-          
-        print('\nEntre ' +  str(initial_date) + ','+' y '+ str(final_date)+' ocurrieron: '+ str(num_acc_in_range)+ ' accidentes.')       
-        print('Se presentaron más accidentes con categoría/severidad de: '+ str(more_acc_by_category[0]) + '. Con un total de: ' + str(more_acc_by_category[1]))
-    
-    elif accidents_in_range[0] == 1:
-        num_acc_in_range1 = 0 
-        num_acc_in_range2 = 0 
-
-        iterator = it.newIterator(accidents_in_range[1])
-        while it.hasNext(iterator):
-
-            key_acc = it.next(iterator)
-            year_bst = str(key_acc.year)
-            day = om.get(catalog[year_bst],key_acc)
-            acc_lst = day['value']['Accidents_lst']
-
-            num_accidents_in_day =  lt.size(acc_lst)
-            num_acc_in_range1 = num_acc_in_range1 + num_accidents_in_day
-                        
-            iterator_sev = it.newIterator(acc_lst)
-            while it.hasNext(iterator_sev):
-                acc = it.next(iterator_sev)
-                acc_category = acc['Severity']
-                if acc_category not in categories_dict:
-                    categories_dict[acc_category] = 1
-                else:
-                    categories_dict[acc_category] = categories_dict[acc_category] + 1
-
-        iterator2 = it.newIterator(accidents_in_range[2])
-        while it.hasNext(iterator2):
-
-            key_acc = it.next(iterator2)
-            year_bst = str(key_acc.year)
-            day = om.get(catalog[year_bst],key_acc)
-            acc_lst = day['value']['Accidents_lst']
-    
-            num_accidents_in_day =  lt.size(acc_lst)
-            num_acc_in_range2 = num_acc_in_range2 + num_accidents_in_day
-
-            iterator_sev = it.newIterator(acc_lst)
-            while it.hasNext(iterator_sev):
-                acc = it.next(iterator_sev)
-                acc_category = acc['Severity']
-
-                if acc_category not in categories_dict:
-                    categories_dict[acc_category] = 1
-                else:
-                    categories_dict[acc_category] = categories_dict[acc_category] + 1
-
-        max_sev = 0
-        categories_dict_keys = categories_dict.keys()
-       
-        for sev in categories_dict_keys:
-            acc_number_sev = categories_dict[sev]
-            if acc_number_sev > max_sev:
-                max_sev = acc_number_sev
-                more_acc_by_category = ( sev , acc_number_sev )
-         
-        print('\nEntre ' +  str(initial_date) + ','+' y '+ str(final_date)+' ocurrieron: '+ str(num_acc_in_range1 + num_acc_in_range2)+ ' accidentes.')       
-        print('Se presentaron más accidentes con categoría/severidad de: '+ str(more_acc_by_category[0]) + '. Con un total de: ' + str(more_acc_by_category[1]))
-
+    """
+    if return_tuple is not None:
+        print('\nEntre ' +  str(initial_date) + ','+' y '+ str(final_date)+' ocurrieron: '+ str(return_tuple[3])+ ' accidentes.')  
+        print('Se presentaron más accidentes con categoría/severidad de: '+ str(return_tuple[0]) + '. Con un total de: ' + str(return_tuple[1]))
     else:
         print('Una o ambas fechas ingresadas no son válidas.')
-
 
 def printStateWithMoreAccidentsInRange(return_tuple):
     """
     RETO3 - REQ4
     Imprime el Estado con más accidentes en un rango dado.
     """
-    print("El estado con más accidentes es: " + str(return_tuple[0]) + ". Con: " + str(return_tuple[1]) + " accidentes.")
-    print("El día en el que se presentaron más accidentes en el rango ingresado fue: " + str((return_tuple[2])['key']) + ". Con: " + str(lt.size((return_tuple[2])['value']['Accidents_lst'])) + " accidentes.")
-  
+    if return_tuple is not None:
+        print("\nEl estado con más accidentes es: " + str(return_tuple[0]) + ". Con: " + str(return_tuple[1]) + " accidentes.")
+        print("El día en el que se presentaron más accidentes en el rango ingresado fue: " + str((return_tuple[2])['key']) + ". Con: " + str(lt.size((return_tuple[2])['value']['Accidents_lst'])) + " accidentes.")
+    else:
+        print('Una o ambas fechas ingresadas no son válidas.')
+
 def printAccidentsInHourRange(catalog,accidents_in_range):
     """
     RETO3 - REQ5 
@@ -330,8 +242,8 @@ while True:
         print("\nRequerimiento No 3 del reto 3: ")
         initial_date = input("\nIngrese el límite inferior del rango de fechas (YYYY-MM-DD):")
         final_date = input("\nIngrese el límite superior del rango de fechas (YYYY-MM-DD):")
-        accidents_in_range = controller.getAccidentsInRange(cont,initial_date,final_date)
-        printAccidentsInRange(cont,initial_date,final_date,accidents_in_range)
+        return_tuple = controller.getAccidentsInRange(cont,initial_date,final_date)
+        printAccidentsInRange(return_tuple,initial_date,final_date)
 
     elif int(inputs[0]) == 6:
         print("\nRequerimiento No 4 del reto 3: ")

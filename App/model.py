@@ -63,14 +63,12 @@ def newCatalog():
     catalog['2020'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)   
     catalog['Hour_RBT'] = om.newMap(omaptype='RBT',
-                                      comparefunction=compareHours)   
-                            
+                                      comparefunction=compareHours)                              
     return catalog
 
 # ==============================
 # Funciones para agregar informacion al catalogo
 # ==============================
-
 
 def addAccident(catalog,accident):
     """
@@ -134,7 +132,6 @@ def updateAccidentInHour(hour_RBT,accident):
         rbt_accident_time = datetime.timedelta(hours=(acc_date.hour + 1 ), minutes = 00)
 
     entry = om.get(hour_RBT,rbt_accident_time)
-
     if entry is None:
         hour_entry = newEntry()
         om.put(hour_RBT,rbt_accident_time,hour_entry)
@@ -163,11 +160,9 @@ def addSeverityToEntry(entryRBT,accident):
         m.put(entryRBT['Severities_mp'] , severity, severity_entry)
 
     else:
-
         severity_entry = me.getValue(entry_sev_mp)
         lt.addLast(severity_entry['ListBySeverity'],accident)
     
-
 # ==============================
 # Funciones para inicializar las entradas de los RBT o Tablas de Hash.
 # ==============================
@@ -183,7 +178,6 @@ def newEntry():
                                      comparefunction=compareSeverity)
     entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
     return entry
-
 
 def newDateEntry():
     """
@@ -251,14 +245,21 @@ def getAccidentsBeforeDate(year_bst,search_date):
         return om.keys(year_bst,keylow,key_date)
     return None
 
-def getAccidentsInRange(catalog,initial_date,final_date):
+def getInRange(catalog,initial_date,final_date):
     """
-    Retorna el número de accidentes ocurridos en un rango de fecha.
+    Retorna una tupla con dos elementos:
+        *El primer elemento es 0 si el rango de fechas abarca un sólo año.
+        O 1 si el rango de fechas abarca dos años.
+        *El segundo elemento de la tupla son
+        las llaves del RBT de accidentes ocurridos en un rango de fechas.
     """ 
     initial_year = str(initial_date.year)
     final_year = str(final_date.year)  
     
-    if initial_date != None and final_date != None:
+    initial_date_accidents = om.contains(catalog[initial_year],initial_date)
+    final_date_accidents = om.contains(catalog[final_year],final_date)
+
+    if initial_date_accidents and final_date_accidents:
         
         if initial_year == final_year:          #Primer caso en el que el rango de fechas se encuentra dentro del mismo año
             keylow = om.get(catalog[initial_year],initial_date)['key']
@@ -276,21 +277,32 @@ def getAccidentsInRange(catalog,initial_date,final_date):
 
     return None
 
-def auxiliarPrintFunction(catalog,initial_date,final_date,criteria):
+def auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria):
     """
     Función que ayuda a recorrer e imprimir.
+
+    Recibe como parametros:
+        *El Catálogo con todos los datos cargados.
+        *La fecha inicial del rango de fechas.
+        *La fecha final del rango de fechas.
+        *Tupla del retorno de la función getInRange()
+        *Criteria: States o Severities
+
     Retorna una tupla con los siguientes valores:
-
-        Día en el que se presentaron más accidentes en el rango.
-        Mayor valor del diccionario según el criterio ingresado.
-        Número total de accidentes en el rango.
-
+        *Llave del mayor valor del diccionario segun el criterio ingresado.
+        *Mayor valor del diccionario según el criterio ingresado.
+        *Día en el que se presentaron más accidentes en el rango.     
+        *Número total de accidentes en el rango.
     """
     dictionary = {}
-    acc_in_range = getAccidentsInRange(catalog,initial_date,final_date)
-
-    if acc_in_range[0] == 0:                     #Primer caso en el que el rango de fechas se encuentra dentro del mismo año
-
+    cont = 1
+    
+    if acc_in_range[0] == 0 and acc_in_range[1] != None:                     #Primer caso en el que el rango de fechas se encuentra dentro del mismo año 
+        condition = 2
+    elif acc_in_range[0] == 1 and acc_in_range[1] != None:                  #Segundo caso en el que el rango de fechas abarca dos años
+        condition = 3
+       
+    while cont < condition:
         more_accidents = 0
         num_acc_in_range = 0
 
@@ -303,218 +315,56 @@ def auxiliarPrintFunction(catalog,initial_date,final_date,criteria):
 
             iterator_acc = it.newIterator(day_accidents)
             while it.hasNext(iterator_acc):
-
+                
                 acc = it.next(iterator_acc)
                 criteria_dictkey = acc[criteria]
                 if criteria_dictkey not in dictionary:
                     dictionary[criteria_dictkey] = 1
                 else:
                     dictionary[criteria_dictkey] = dictionary[criteria_dictkey] + 1
-
 
             num_accidents_in_day =  lt.size(day_accidents) 
             num_acc_in_range = num_acc_in_range + num_accidents_in_day          #Se calcula el total de accidentes en el rango de fechas.
                 
             if num_accidents_in_day > more_accidents:                           #Se calcula el día en el que ocurrieron más accidentes en el rango de fechas.
                 more_accidents = num_accidents_in_day
-                more_addicents_day = day
-    
-        max_dict_value = 0
-        dictionary_keys = dictionary.keys()
-        for value in dictionary_keys:                                           #Se calcula la llave del diccionario con mayor valor en el rango de fehcas.
-            num_value = dictionary[value]
-            if num_value > max_dict_value:
-                max_dict_value = num_value
-                winner_value = value
+                more_accdicents_day = day
 
-    elif acc_in_range[0] == 1:                  #Segundo caso en el que el rango de fechas abarca dos años
-        more_accidents = 0
-        num_acc_in_range = 0
+        cont = cont + 1
 
-        iterator = it.newIterator(acc_in_range[1])
-        while it.hasNext(iterator):
+    max_dict_value = 0
+    dictionary_keys = dictionary.keys()
 
-            Key_Entry = it.next(iterator)           
-            day = om.get(catalog[str(Key_Entry.year)],Key_Entry)
-            day_accidents = day['value']['Accidents_lst']
+    for value in dictionary_keys:                                           #Se calcula la llave del diccionario con mayor valor en el rango de fehcas.
+        num_value = dictionary[value]
+        if num_value > max_dict_value:
+            max_dict_value = num_value
+            max_value = value
 
-            iterator_acc = it.newIterator(day_accidents)
-            while it.hasNext(iterator_acc):
+    return max_value , dictionary[max_value]  , more_accdicents_day ,  num_acc_in_range  
 
-                acc = it.next(iterator_acc)
-                criteria_dictkey = acc[criteria]
-                if criteria_dictkey not in dictionary:
-                    dictionary[criteria_dictkey] = 1
-                else:
-                    dictionary[criteria_dictkey] = dictionary[criteria_dictkey] + 1
-
-            num_acc_in_range = num_acc_in_range + num_accidents_in_day          #Se calcula el total de accidentes en el rango de fechas.
-
-            num_accidents_in_day =  lt.size(day_accidents)                            #Se calcula el día en el que ocurrieron más accidentes en el rango de fechas.
-            if num_accidents_in_day > more_accidents:
-                more_accidents = num_accidents_in_day
-                more_addicents_day = day
-    
-        max_dict_value = 0
-        dictionary_keys = dictionary.keys()
-        for value in dictionary_keys:                                           #Se calcula la llave del diccionario con mayor valor en el rango de fehcas.
-            num_value = dictionary[value]
-            if num_value > max_dict_value:
-                max_dict_value = num_value
-                winner_value = value
-
-        iterator2 = it.newIterator(acc_in_range[2])
-        while it.hasNext(iterator2):
-
-            Key_Entry = it.next(iterator)           
-            day = om.get(catalog[str(Key_Entry.year)],Key_Entry)
-            day_accidents = day['value']['Accidents_lst']
-
-            iterator_acc = it.newIterator(day_accidents)
-            while it.hasNext(iterator_acc):
-
-                acc = it.next(iterator_acc)
-                criteria_dictkey = acc[criteria]
-                if criteria_dictkey not in dictionary:
-                    dictionary[criteria_dictkey] = 1
-                else:
-                    dictionary[criteria_dictkey] = dictionary[criteria_dictkey] + 1
-
-            num_acc_in_range = num_acc_in_range + num_accidents_in_day          #Se calcula el total de accidentes en el rango de fechas.
-
-            num_accidents_in_day =  lt.size(day_accidents)                            #Se calcula el día en el que ocurrieron más accidentes en el rango de fechas.
-            if num_accidents_in_day > more_accidents:
-                more_accidents = num_accidents_in_day
-                more_addicents_day = day
-    
-        max_dict_value = 0
-        dictionary_keys = dictionary.keys()
-        for value in dictionary_keys:                                           #Se calcula la llave del diccionario con mayor valor en el rango de fehcas.
-            num_value = dictionary[value]
-            if num_value > max_dict_value:
-                max_dict_value = num_value
-                winner_value = value
-
-    return winner_value , dictionary[winner_value]  , more_addicents_day ,  num_acc_in_range  
-
-
+def getAccidentsInRange(catalog,initial_date,final_date):  
+    """
+    RETO3 - REQ5
+    Retorna los accidentes en un rango.
+    """
+    criteria = 'Severity'
+    acc_in_range = getInRange(catalog,initial_date,final_date)
+    if acc_in_range != None:
+        accidentes_in_range_by_criteria = auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria)
+        return accidentes_in_range_by_criteria
+    return None
 def getStateWithMoreAccidents(catalog,initial_date,final_date):
     """
     RETO3 - REQ4
     Retorna el Estado con más accidentes registrados en un rango de fechas.
     """ 
-
     criteria = 'State'
-    States = auxiliarPrintFunction(catalog,initial_date,final_date,criteria)
-    return States
-
-def x(catalog,initial_date,final_date):
-    """
-    RETO3 - REQ4
-    Retorna el Estado con más accidentes registrados en un rango de fechas.
-    """ 
-    states_dict = {}
-    acc_in_range = getAccidentsInRange(catalog,initial_date,final_date)
-
-    if acc_in_range[0] == 0:
-        more_accidents = 0
-
-        iterator = it.newIterator(acc_in_range[1])
-        while it.hasNext(iterator):
-
-            key_acc = it.next(iterator)
-            year_bst = str(key_acc.year)
-            day = om.get(catalog[year_bst],key_acc)
-            day_acc = day['value']['Accidents_lst']
-
-            iterator_acc = it.newIterator(day_acc)
-            while it.hasNext(iterator_acc):
-
-                acc = it.next(iterator_acc)
-                state = acc['State']
-                if state not in states_dict:
-                    states_dict[state] = 1
-                else:
-                    states_dict[state] = states_dict[state] + 1
-
-            num_accidents_in_day =  lt.size(day_acc)
-            if num_accidents_in_day > more_accidents:
-                more_accidents = num_accidents_in_day
-                winner_day = day
-    
-        max_state = 0
-        states_dict_keys = states_dict.keys()
-        for state in states_dict_keys:
-            num_acc_state = states_dict[state]
-            if num_acc_state > max_state:
-                max_state = num_acc_state
-                winner_state = state
-
-    elif acc_in_range[0] == 1:
-        more_accidents1 = 0
-
-        iterator = it.newIterator(acc_in_range[1])
-        while it.hasNext(iterator):
-
-            key_acc = it.next(iterator)
-            year_bst = str(key_acc.year)
-            day = om.get(catalog[year_bst],key_acc)
-            day_acc = day['value']['Accidents_lst']
-
-            iterator_acc = it.newIterator(day_acc)
-            while it.hasNext(iterator_acc):
-
-                acc = it.next(iterator_acc)
-                state = acc['State']
-                if state not in states_dict:
-                    states_dict[state] = 1
-                else:
-                    states_dict[state] = states_dict[state] + 1
-            
-            num_accidents_in_day =  lt.size(day_acc)
-            if num_accidents_in_day > more_accidents1:
-                more_accidents1 = num_accidents_in_day
-                winner_day1 = day
-
-        more_accidents2 = 0
-
-        iterator2 = it.newIterator(acc_in_range[2])
-        while it.hasNext(iterator2):
-
-            key_acc = it.next(iterator2)
-            year_bst = str(key_acc.year)
-            day = om.get(catalog[year_bst],key_acc)
-            day_acc = day['value']['Accidents_lst']
-        
-            iterator_acc = it.newIterator(day_acc)
-            while it.hasNext(iterator_acc):
-
-                acc = it.next(iterator_acc)
-                state = acc['State']
-                if state not in states_dict:
-                    states_dict[state] = 1
-                else:
-                    states_dict[state] = states_dict[state] + 1
-
-            num_accidents_in_day =  lt.size(day_acc)
-            if num_accidents_in_day > more_accidents2:
-                more_accidents2 = num_accidents_in_day
-                winner_day2 = day
-
-        if more_accidents1 > more_accidents2:
-            winner_day = winner_day1
-        else:
-            winner_day = winner_day2
-    
-        max_state = 0
-        states_dict_keys = states_dict.keys()
-        for state in states_dict_keys:
-            num_acc_state = states_dict[state]
-            if num_acc_state > max_state:
-                max_state = num_acc_state
-                winner_state = state
-
-    return winner_state , states_dict[winner_state] , winner_day 
+    acc_in_range = getInRange(catalog,initial_date,final_date)
+    if acc_in_range != None:
+        accidentes_in_range_by_criteria = auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria)
+        return accidentes_in_range_by_criteria
+    return None
 
 def getAccidentsInHourRange(catalog,initial_hour,final_hour):
     """
@@ -545,7 +395,6 @@ def getAccidentsInHourRange(catalog,initial_hour,final_hour):
         rbt_final_hour = datetime.timedelta(hours=final_hour.hour, minutes = 30)   
     elif acc_minutes2 > (fifteen_minutes)*3:
         rbt_final_hour = datetime.timedelta(hours=(final_hour.hour + 1 ), minutes = 00)
-
 
     Hour_RBT = catalog['Hour_RBT']
     keylow = om.get(Hour_RBT,rbt_initial_time)['key']
@@ -651,7 +500,6 @@ def compareSeverity(sev_accident1,sev_accident2):
         return 1
     else:
         return -1
-
 
 def compareHours(time1,time2):
     """

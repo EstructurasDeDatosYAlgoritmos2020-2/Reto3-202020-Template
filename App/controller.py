@@ -55,9 +55,7 @@ def loadData(catalog, accidentsfile):
     """
     accidentsfile = cf.data_dir + accidentsfile
     input_file = csv.DictReader(open(accidentsfile, encoding="utf-8"),
-                                delimiter=",")
-                                
-       
+                                delimiter=",")                               
     for accident in input_file:
         model.addAccident(catalog,accident)
 
@@ -114,11 +112,10 @@ def getAccidentsInHourRange(catalog,initial_hour,final_hour):
     Llama la función en model que retorna
     los accidentes dado un rango de horas.
     """       
-    
     initial_hour = datetime.datetime.strptime(initial_hour,'%H:%M')
-    final_hour = datetime.datetime.strptime(final_hour,'%H:%M')
-  
+    final_hour = datetime.datetime.strptime(final_hour,'%H:%M') 
     return model.getAccidentsInHourRange(catalog,initial_hour,final_hour)
+    
 # ==============================
 # Funciones para consultar tamaño y altura de los árboles/mapas.
 # ==============================

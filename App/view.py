@@ -91,8 +91,9 @@ def printAccidentsByDate(accidents_by_date,search_date):
 
         Map_Severity = accidents_by_date['Severities_mp']['table']['elements']
         for severity in Map_Severity:
+            print('Sevvvv',severity)
             severity_lvl = me.getValue(severity)
-
+            print('hola',me.getKey(severity))
             if severity_lvl is not None:
                 iterator = it.newIterator(severity_lvl['ListBySeverity'])
 
@@ -111,7 +112,6 @@ def printAccidentsBeforeDare(accidents_before,search,catalog):
     Imprime los accidentes anteriores a una fecha.
     """
     if accidents_before is not None:
- 
         num_acc_before_date = 0
         more_accidents = 0
     
@@ -146,8 +146,8 @@ def printAccidentsInRange(catalog,initial_date,final_date,accidents_in_range):
         while it.hasNext(iterator):
 
             key_acc = it.next(iterator)
-            year_bst = str(key_acc.year)
-            day = om.get(catalog[year_bst],key_acc)
+            
+            day = om.get(catalog[str(key_acc.year)],key_acc)
             acc_lst = day['value']['Accidents_lst']
 
             num_accidents_in_day =  lt.size(acc_lst)
@@ -244,28 +244,42 @@ def printStateWithMoreAccidentsInRange(return_tuple):
     print("El día en el que se presentaron más accidentes en el rango ingresado fue: " + str((return_tuple[2])['key']) + ". Con: " + str(lt.size((return_tuple[2])['value']['Accidents_lst'])) + " accidentes.")
   
 
-def printAccidentsInHourRange(cont,accidents_in_range):
+def printAccidentsInHourRange(catalog,accidents_in_range):
     """
     RETO3 - REQ5 
     Imprime los accidentes en un rango de horas.
     """
+    severities_dict = {}
     if accidents_in_range is not None:
-
-        map_Severity = accidents_in_range['Severities_mp']['table']['elements']
-        for severity in Map_Severity:
-            severity_lvl = me.getValue(severity)
         
-            if severity_lvl is not None:
-                iterator = it.newIterator(severity_lvl['ListBySeverity'])
-                print('\nHubieron: '+ str(lt.size(severity_lvl['ListBySeverity'])) + ' accidentes con Nivel de Gravedad: ' + str(severity_lvl['Severity']))
-        
-                cont = 0
-                while it.hasNext(iterator) and cont < 3:
-                    cont = cont + 1
-                    acc = it.next(iterator)
-                    date_time = datetime.datetime.strptime(acc['Start_Time'], '%Y-%m-%d %H:%M:%S')
-                    print('ID: ' +  str(acc['ID']) +  '  Datos Fecha: '+ str(date_time.ctime()) + '    '+ str(acc['Description']))
+        total_accidents = 0
+        iterator1 = it.newIterator(accidents_in_range)
+        while it.hasNext(iterator1):       
+            h = it.next(iterator1)
+         
+            numacc = (lt.size(h['Accidents_lst']))
+            total_accidents = total_accidents + numacc
+            key_set = m.keySet(h['Severities_mp'])
+    
+            iterator2 = it.newIterator(key_set)
+            while it.hasNext(iterator2):    
 
+                sev_num = it.next(iterator2)
+                severity_lvl = m.get(h['Severities_mp'],sev_num)['value']
+
+
+                if severity_lvl is not None:
+                        if sev_num not in severities_dict:
+                            severities_dict[sev_num] = lt.size(severity_lvl['ListBySeverity'])
+                        else:
+                            severities_dict[sev_num]  = severities_dict[sev_num]  + lt.size(severity_lvl['ListBySeverity'])
+
+        for sev in severities_dict:
+            
+            print('\nHubieron: '+ str(severities_dict[sev] ) + ' accidentes con Nivel de Gravedad: ' + str(sev))
+            print('Representan un: ' + str( round(((severities_dict[sev]*100)/total_accidents ),2)) + " % del total de accidentes.")
+
+        print('\nOcurrieron un total de: ' + str(total_accidents) + " accidentes en el rango de horas ingresado.")
 
     else:
         print('Una o ambas fechas ingresadas no son válidas')
@@ -287,7 +301,6 @@ def printMenu():
     print("6- Requerimento 4: Conocer el Estado con más accidentes en un rango de fechas.")
     print("7- Requerimento 5: Conocer los accidentes por rango de horas.")
 #    print("8- Requerimento 6: Conocer la zona geográfica más accidentada.")
-#    print("9- Requerimento 7: ")
     print("0- Salir")
     print("*******************************************")
 
@@ -343,8 +356,6 @@ while True:
 
 #    elif int(inputs[0]) == 8:
 #        print("\nRequerimiento No 6 del reto 3: ")
-#    elif int(inputs[0]) == 9:
-#        print("\nRequerimiento No 7 del reto 3: ")
 
     else:
         sys.exit(0)

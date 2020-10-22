@@ -101,7 +101,7 @@ def updateAccidentInDate(year_RBT,accident):
     entry = om.get(year_RBT,acc_date.date())
 
     if entry is None:
-        date_entry = newDateEntry()
+        date_entry = newEntry()
         om.put(year_RBT,acc_date.date(),date_entry)     
     else:
         date_entry = me.getValue(entry)
@@ -116,15 +116,13 @@ def updateAccidentInHour(hour_RBT,accident):
         Se actualiza la lista de accidentes ocurridos en esa hora.
     """
     ocurred_date = accident['Start_Time']
-
-    acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
-    acc_time = datetime.timedelta(hours=acc_date.hour, minutes = acc_date.minute)
-    acc_minutes = datetime.timedelta(minutes=acc_date.minute)
-
     fifteen_minutes = datetime.timedelta(minutes=15)
 
+    acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
+    acc_minutes = datetime.timedelta(minutes=acc_date.minute)
+   
     if acc_minutes == 00:
-        rbt_accident_time = acc_time
+        rbt_accident_time = datetime.timedelta(hours=acc_date.hour, minutes = 00)
 
     elif acc_minutes <= fifteen_minutes:
         rbt_accident_time = datetime.timedelta(hours=acc_date.hour, minutes = 00)
@@ -138,7 +136,7 @@ def updateAccidentInHour(hour_RBT,accident):
     entry = om.get(hour_RBT,rbt_accident_time)
 
     if entry is None:
-        hour_entry = newHourEntry(acc_date)
+        hour_entry = newEntry()
         om.put(hour_RBT,rbt_accident_time,hour_entry)
     else:
         hour_entry = me.getValue(entry)
@@ -162,8 +160,8 @@ def addSeverityToEntry(entryRBT,accident):
     if entry_sev_mp is None:
         severity_entry = newSeverityEntry(accident)
         lt.addLast(severity_entry['ListBySeverity'],accident)
-
         m.put(entryRBT['Severities_mp'] , severity, severity_entry)
+
     else:
 
         severity_entry = me.getValue(entry_sev_mp)
@@ -174,6 +172,18 @@ def addSeverityToEntry(entryRBT,accident):
 # Funciones para inicializar las entradas de los RBT o Tablas de Hash.
 # ==============================
 
+def newEntry():
+    """
+    Crea un entry dada una fecha con sus respectivas llaves: 
+    Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
+    """
+    entry = {'Severities_mp': None, 'Accidents_lst': None}
+    entry['Severities_mp'] = m.newMap(numelements=5,
+                                     maptype='PROBING',
+                                     comparefunction=compareSeverity)
+    entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
+    return entry
+
 
 def newDateEntry():
     """
@@ -181,21 +191,20 @@ def newDateEntry():
     Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
     """
     entry = {'Severities_mp': None, 'Accidents_lst': None}
-    entry['Severities_mp'] = m.newMap(numelements=15,
+    entry['Severities_mp'] = m.newMap(numelements=6,
                                      maptype='PROBING',
                                      comparefunction=compareSeverity)
     entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
     return entry
 
-def newHourEntry(hour):
+def newHourEntry():
     """
     RETO3 - REQ5
     Crea una entry en el árbol de horas. Con:
     Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
     """
-    entry = {'Hour': None, 'Severities_mp': None, 'Accidents_lst': None}
-  
-    entry['Severities_mp'] = m.newMap(numelements=15,
+    entry = {'Severities_mp': None, 'Accidents_lst': None}
+    entry['Severities_mp'] = m.newMap(numelements=6,
                                      maptype='PROBING',
                                      comparefunction=compareSeverity)
     entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
@@ -267,6 +276,13 @@ def getAccidentsInRange(catalog,initial_date,final_date):
             return 1 , dates_initial_year , dates_final_year
 
     return None
+
+def auxiliarPrintFunction(catalog,initial_date,final_date):
+    """
+    Función que ayuda a recorrer e imprimir.
+    """
+
+
 
 def getStateWithMoreAccidents(catalog,initial_date,final_date):
     """
@@ -381,42 +397,38 @@ def getAccidentsInHourRange(catalog,initial_hour,final_hour):
     RETO3 - REQ5
     Retorna los accidentes dado un rango de horas.
     """ 
-
     acc_time1 = datetime.timedelta(hours=initial_hour.hour, minutes = initial_hour.minute)
     acc_minutes1 = datetime.timedelta(minutes=initial_hour.minute)
     fifteen_minutes = datetime.timedelta(minutes=15)
     
     if acc_minutes1 == 00:
         rbt_initial_time = acc_time1
-
     elif acc_minutes1 <= fifteen_minutes:
         rbt_initial_time = datetime.timedelta(hours=initial_hour.hour, minutes = 00)
-
     elif acc_minutes1 >= fifteen_minutes and acc_minutes1 <= (fifteen_minutes)*3:
-        rbt_initial_time = datetime.timedelta(hours=initial_hour.hour, minutes = 30)
-    
+        rbt_initial_time = datetime.timedelta(hours=initial_hour.hour, minutes = 30)  
     elif acc_minute1 > (fifteen_minutes)*3:
         rbt_initial_time = datetime.timedelta(hours=(initial_hour.hour + 1 ), minutes = 00)
-
 
     acc_time2 = datetime.timedelta(hours=final_hour.hour, minutes = final_hour.minute)
     acc_minutes2 = datetime.timedelta(minutes=final_hour.minute)
 
     if acc_minutes2 == 00:
         rbt_final_hour = acc_time2
-
     elif acc_minutes2 <= fifteen_minutes:
-        rbt_accident_time = datetime.timedelta(hours=final_hour.hour, minutes = 00)
-
+        rbt_final_hour = datetime.timedelta(hours=final_hour.hour, minutes = 00)
     elif acc_minutes2 >= fifteen_minutes and acc_minutes2 <= (fifteen_minutes)*3:
-        rbt_final_hour = datetime.timedelta(hours=final_hour.hour, minutes = 30)
-    
+        rbt_final_hour = datetime.timedelta(hours=final_hour.hour, minutes = 30)   
     elif acc_minutes2 > (fifteen_minutes)*3:
         rbt_final_hour = datetime.timedelta(hours=(final_hour.hour + 1 ), minutes = 00)
 
+
     Hour_RBT = catalog['Hour_RBT']
+    keylow = om.get(Hour_RBT,rbt_initial_time)['key']
+    keyhigh = om.get(Hour_RBT,rbt_final_hour)['key']
+
     if initial_hour != None and final_hour != None:
-        return om.values(Hour_RBT,rbt_initial_time,rbt_final_hour)
+        return om.values(Hour_RBT,keylow,keyhigh)
     return None
 
 # ==============================
@@ -516,20 +528,6 @@ def compareSeverity(sev_accident1,sev_accident2):
     else:
         return -1
 
-def compareStatesNames(keyname,state):
-    """
-    Compara dos nombres de Estados.
-    Compara el nombre del Estado con una entry en 
-    el mapa (Hash Table). Requiere obtener la llave del entry.
-    """
-    state1 = str(keyname)
-    state2 = me.getKey(state)
-    if (state1 == state2):
-        return 0
-    elif (state1 > state2):
-        return 1
-    else:
-        return -1
 
 def compareHours(time1,time2):
     """

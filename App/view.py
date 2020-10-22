@@ -94,7 +94,7 @@ def printAccidentsByDate(accidents_by_date,search_date):
             severity_lvl = me.getValue(severity)
             if severity_lvl is not None:
                 iterator = it.newIterator(severity_lvl['ListBySeverity'])
-
+                
                 print('\nAccidentes con Nivel de Gravedad: ' + str(severity_lvl['Severity']) +' (' +str(lt.size(severity_lvl['ListBySeverity'])) + ')')
                 while it.hasNext(iterator):
                     acc = it.next(iterator)

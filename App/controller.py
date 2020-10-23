@@ -55,12 +55,9 @@ def loadData(catalog, accidentsfile):
     """
     accidentsfile = cf.data_dir + accidentsfile
     input_file = csv.DictReader(open(accidentsfile, encoding="utf-8"),
-                                delimiter=",")
+                                delimiter=",")                               
     for accident in input_file:
         model.addAccident(catalog,accident)
-#        model.addAccidentToState(catalog,accident)
-    
-    return catalog
 
 # ___________________________________________________
 #  Funciones para consultas
@@ -98,14 +95,30 @@ def getAccidentsInRange(catalog,initial_date,final_date):
     final_date = datetime.datetime.strptime(final_date, '%Y-%m-%d')
     return model.getAccidentsInRange(catalog,initial_date.date(),final_date.date())
 
-def getStateWithMoreAccidents(catalog):
+def getStateWithMoreAccidents(catalog,initial_date,final_date):
     """
     RETO3 - REQ4
     Llama la función en model que retorna
-    el Estado con más accidentes reportados.
-    """    
-    return model.getStateWithMoreAccidents(catalog)
+    el Estado con más accidentes reportados en un rango
+    de fechas.
+    """   
+    initial_date = datetime.datetime.strptime(initial_date, '%Y-%m-%d')
+    final_date = datetime.datetime.strptime(final_date, '%Y-%m-%d') 
+    return model.getStateWithMoreAccidents(catalog,initial_date.date(),final_date.date())
 
+def getAccidentsInHourRange(catalog,initial_hour,final_hour):
+    """
+    RETO3 - REQ5
+    Llama la función en model que retorna
+    los accidentes dado un rango de horas.
+    """       
+    initial_hour = datetime.datetime.strptime(initial_hour,'%H:%M')
+    final_hour = datetime.datetime.strptime(final_hour,'%H:%M') 
+    return model.getAccidentsInHourRange(catalog,initial_hour,final_hour)
+    
+# ==============================
+# Funciones para consultar tamaño y altura de los árboles/mapas.
+# ==============================
 def yearsSize(catalog):
     """
     Llama la función en model que retorna
@@ -113,6 +126,14 @@ def yearsSize(catalog):
     los años.
     """    
     return model.yearsSize(catalog)
+
+def hoursSize(catalog):
+    """
+    Llama la función en el model que
+    retorna el número de HH:MM en las que ocurrieron
+    accidentes.
+    """
+    return model.hoursSize(catalog)
 
 def accidentsSize(catalog):
     """
@@ -135,3 +156,11 @@ def eachYearHeight(catalog):
     la altura del árbol de cada año.
     """    
     return model.eachYearHeight(catalog)    
+
+def hourHeight(catalog):
+    """
+    Llama a la función en el model 
+    que retorna la altura del árbol de 
+    horas.
+    """
+    return model.hourHeight(catalog)

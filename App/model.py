@@ -38,8 +38,8 @@ es decir contiene los modelos con los datos en memoria
 # -----------------------------------------------------
 
 def newCatalog():
-    """ Inicializa el catálogo
-
+    """ 
+    Inicializa el catálogo
     Retorna el catálogo inicializado.
     """
     catalog = {'accidents': None,
@@ -47,11 +47,11 @@ def newCatalog():
                 '2017': None,
                 '2018': None,
                 '2019': None,
-                '2020': None
+                '2020': None,
+                'Hour_RBT':None
                 }
 
     catalog['accidents'] = lt.newList('ARRAY_LIST',compareAccidentsID)
-#    catalog['years'] = lt.newList('SINGLE_LINKED', )
     catalog['2016'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
     catalog['2017'] = om.newMap(omaptype='RBT',
@@ -61,10 +61,9 @@ def newCatalog():
     catalog['2019'] = om.newMap(omaptype='RBT',
                                       comparefunction=compareDates)
     catalog['2020'] = om.newMap(omaptype='RBT',
-                                      comparefunction=compareDates)    
-    catalog['States'] = m.newMap(100,maptype='PROBING',
-                                    loadfactor=0.4,
-                                    comparefunction=compareStatesNames)                              
+                                      comparefunction=compareDates)   
+    catalog['Hour_RBT'] = om.newMap(omaptype='RBT',
+                                      comparefunction=compareHours)                              
     return catalog
 
 # ==============================
@@ -73,108 +72,138 @@ def newCatalog():
 
 def addAccident(catalog,accident):
     """
-    Adiciona un accidente a la lista de accidentes.
-    Adiciona el ID de un accidente a su respectivo año de ocurrencia,
-    cuya llave es la información del accidente.
+    Adiciona un accidente a la lista de accidentes en el catálogo.
+    Adiciona la fecha de un accidente como llave a su respectivo año de ocurrencia (RBT).
+    Actualiza el entry en el caso de que la fecha ya exista:
+        Se actualiza el mapa de severidades.
+        Se actualiza la lista de accidentes en la fecha.
     """  
     occurred_start_date = accident['Start_Time']
     if occurred_start_date is not None:
 
         accident_date = datetime.datetime.strptime(occurred_start_date, '%Y-%m-%d %H:%M:%S')
         ocurred_year = str(accident_date.year)
-    
         lt.addLast(catalog['accidents'],accident)
-        uptadeAccidentInDate(catalog[ocurred_year],accident) 
-    
-    return catalog 
+        updateAccidentInDate(catalog[ocurred_year],accident) 
+        updateAccidentInHour(catalog['Hour_RBT'],accident)
 
-def newState(name):
+def updateAccidentInDate(year_RBT,accident):
     """
-    RETO3 - REQ4
-    Adiciona un Estado al mapa de Estados.
-    """
-    state = {"Name": name, "Accidents": None}
-    state['Accidents'] = lt.newList('ARRAY_LIST',compareDates)
-    return state
-
-def uptadeAccidentInDate(year_map,accident):
-    """
-    Se toma la fecha del accidente y se busca si ya existe en el arbol
-    dicha fecha. Si es asi, se adiciona a su lista de accidentes
-    y se añade a una tabla de hash por su severidad.
-
-    Si no se encuentra creado un nodo para esa fecha en el arbol
-    se crea.
+    Adiciona la fecha de un accidente como llave a su respectivo año de ocurrencia (RBT).
+    Actualiza el entry en el caso de que la fecha ya exista:
+        Se actualiza el mapa de severidades.
+        Se actualiza la lista de accidentes en la fecha.
     """
     ocurred_date = accident['Start_Time']
     acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
-    entry = om.get(year_map,acc_date.date())
+    entry = om.get(year_RBT,acc_date.date())
 
     if entry is None:
-        date_entry = newDateEntry()
-        
-        om.put(year_map,acc_date.date(),date_entry)  
+        date_entry = newEntry()
+        om.put(year_RBT,acc_date.date(),date_entry)     
     else:
         date_entry = me.getValue(entry)
+    addSeverityToEntry(date_entry,accident)
+
+def updateAccidentInHour(hour_RBT,accident):
+    """
+    RETO3 - REQ5
+    Adiciona la hora en la que ocurrió un accidente como llave al RBT.
+    Actualiza el entry en el caso de que la hora ya exista:
+        Se actualiza el mapa de severidades.
+        Se actualiza la lista de accidentes ocurridos en esa hora.
+    """
+    ocurred_date = accident['Start_Time']
+    fifteen_minutes = datetime.timedelta(minutes=15)
+
+    acc_date = datetime.datetime.strptime(ocurred_date, '%Y-%m-%d %H:%M:%S')
+    acc_minutes = datetime.timedelta(minutes=acc_date.minute)
+   
+    if acc_minutes == 00:
+        rbt_accident_time = datetime.timedelta(hours=acc_date.hour, minutes = 00)
+
+    elif acc_minutes <= fifteen_minutes:
+        rbt_accident_time = datetime.timedelta(hours=acc_date.hour, minutes = 00)
+
+    elif acc_minutes >= fifteen_minutes and acc_minutes <= (fifteen_minutes)*3:
+        rbt_accident_time = datetime.timedelta(hours=acc_date.hour, minutes = 30)
     
-    addSeverityToDateEntry(date_entry,accident)
-    return year_map
+    elif acc_minutes > (fifteen_minutes)*3:
+        rbt_accident_time = datetime.timedelta(hours=(acc_date.hour + 1 ), minutes = 00)
 
-def addSeverityToDateEntry(date_entry,accident):
-    """
-    Actualiza un indice de grado de severidad. Este indice tiene una lista
-    de accidentes y una tabla de hash cuya llave es el grado de severidad del
-    accidente y el valor es una lista con los accidentes de dicha severidad
-    en la fecha que se está consultando (dada por el nodo del arbol)
-    """
-    lt.addLast(date_entry['Accidents_lst'],accident)
-    severity = accident['Severity']
-    entry = m.get(date_entry['Severities_mp'], severity)
-
+    entry = om.get(hour_RBT,rbt_accident_time)
     if entry is None:
+        hour_entry = newEntry()
+        om.put(hour_RBT,rbt_accident_time,hour_entry)
+    else:
+        hour_entry = me.getValue(entry)
+
+    addSeverityToEntry(hour_entry,accident)
+
+def addSeverityToEntry(entryRBT,accident):
+    """
+    Añade un accidente a la lista de accidentes de la entry (Fecha u Hora, depende del árbol).
+    
+    Actualiza un entry de grado de severidad. 
+    Este indice tiene una lista de accidentes y una tabla de hash:
+    (Llave: Grado de severidad del accidente, 
+    Valor: Lista con los accidentes de dicha severidad)
+
+    """
+    lt.addLast(entryRBT['Accidents_lst'],accident)
+    severity = accident['Severity']
+    entry_sev_mp = m.get(entryRBT['Severities_mp'], severity)
+
+    if entry_sev_mp is None:
         severity_entry = newSeverityEntry(accident)
         lt.addLast(severity_entry['ListBySeverity'],accident)
-        m.put(date_entry['Severities_mp'] , severity, severity_entry)
+        m.put(entryRBT['Severities_mp'] , severity, severity_entry)
+
     else:
-        severity_entry = me.getValue(entry)
+        severity_entry = me.getValue(entry_sev_mp)
         lt.addLast(severity_entry['ListBySeverity'],accident)
     
-    return date_entry
+# ==============================
+# Funciones para inicializar las entradas de los RBT o Tablas de Hash.
+# ==============================
 
-def addAccidentToState(catalog,accident):
+def newEntry():
     """
-    Crea una entrada en el mapa para cada Estado.
-    Si la entrada ya existe, se actualizan sus datos
-    añadiéndose el accidente a su lista.
-    """
-
-    states_mp = catalog['States']
-    acc_state = str(accident['State'])
-    exists_state = m.contains(states_mp,acc_state)
-
-    if exists_state:
-        entry = mp.get(states_mp,acc_state)
-        State = me.getValue(entry)
-    
-    else:
-        State = newState(acc_state)
-        m.put(states_mp,acc_state,State)
-
-    lt.addLast(State['Accidents'],accident)
-
-
-def newDateEntry():
-    """
-    Se crea un nodo dada una fecha con sus respectivas llaves: 
+    Crea un entry dada una fecha con sus respectivas llaves: 
     Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
     """
     entry = {'Severities_mp': None, 'Accidents_lst': None}
-    entry['Severities_mp'] = m.newMap(numelements=15,
+    entry['Severities_mp'] = m.newMap(numelements=5,
                                      maptype='PROBING',
                                      comparefunction=compareSeverity)
     entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
     return entry
 
+def newDateEntry():
+    """
+    Crea un entry dada una fecha con sus respectivas llaves: 
+    Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
+    """
+    entry = {'Severities_mp': None, 'Accidents_lst': None}
+    entry['Severities_mp'] = m.newMap(numelements=6,
+                                     maptype='PROBING',
+                                     comparefunction=compareSeverity)
+    entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
+    return entry
+
+def newHourEntry():
+    """
+    RETO3 - REQ5
+    Crea una entry en el árbol de horas. Con:
+    Lista de accidentes (Lista) y grados de gravedad (Tabla de Hash).
+    """
+    entry = {'Severities_mp': None, 'Accidents_lst': None}
+    entry['Severities_mp'] = m.newMap(numelements=6,
+                                     maptype='PROBING',
+                                     comparefunction=compareSeverity)
+    entry['Accidents_lst'] = lt.newList('SINGLE_LINKED', compareDates)
+    return entry
+    
 def newSeverityEntry(accident):
     """
     Se crea un nuevo grado de gravedad con sus respectivas llaves:
@@ -184,6 +213,7 @@ def newSeverityEntry(accident):
     severity_entry = {'Severity': None, 'ListBySeverity': None}
     severity_entry['Severity'] = accident['Severity']
     severity_entry['ListBySeverity'] = lt.newList('SINGLE_LINKED', compareSeverity)
+
     return severity_entry
 
 # ==============================
@@ -212,45 +242,171 @@ def getAccidentsBeforeDate(year_bst,search_date):
         key_date = date_accidents['key']
         keylow = om.minKey(year_bst)
 
-        return om.values(year_bst,keylow,key_date)
+        return om.keys(year_bst,keylow,key_date)
     return None
 
-def getAccidentsInRange(catalog,initial_date,final_date):
+def getInRange(catalog,initial_date,final_date):
     """
-    RETO3 - REQ3
-    Retorna el número de accidentes ocurridos anteriores a una fecha.
+    Retorna una tupla con dos elementos:
+        *El primer elemento es 0 si el rango de fechas abarca un sólo año.
+        O 1 si el rango de fechas abarca dos años.
+        *El segundo elemento de la tupla son
+        las llaves del RBT de accidentes ocurridos en un rango de fechas.
     """ 
     initial_year = str(initial_date.year)
     final_year = str(final_date.year)  
     
-    if initial_date != None and final_date != None:
+    initial_date_accidents = om.contains(catalog[initial_year],initial_date)
+    final_date_accidents = om.contains(catalog[final_year],final_date)
+
+    if initial_date_accidents and final_date_accidents:
         
-        if initial_year == final_year:
+        if initial_year == final_year:          #Primer caso en el que el rango de fechas se encuentra dentro del mismo año
             keylow = om.get(catalog[initial_year],initial_date)['key']
             keyhigh = om.get(catalog[initial_year],final_date)['key']
     
-            return 0 , om.values(catalog[initial_year],keylow,keyhigh)
+            return 0 , om.keys(catalog[initial_year],keylow,keyhigh)
 
-        else:
+        else:                                   #Segundo caso en el que el rango de fechas abarca dos años
             keymax = om.maxKey(catalog[initial_year])
-            dates_initial_year = om.values(catalog[initial_year],initial_date,keymax)
+            dates_initial_year = om.keys(catalog[initial_year],initial_date,keymax)
 
             keymin = om.minKey(catalog[final_year])
-            dates_final_year = om.values(catalog[final_year],final_date,keymin)
+            dates_final_year = om.keys(catalog[final_year],final_date,keymin)
             return 1 , dates_initial_year , dates_final_year
 
     return None
 
-def getStateWithMoreAccidents(catalog):
+def auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria):
+    """
+    Función que ayuda a recorrer e imprimir.
+
+    Recibe como parametros:
+        *El Catálogo con todos los datos cargados.
+        *La fecha inicial del rango de fechas.
+        *La fecha final del rango de fechas.
+        *Tupla del retorno de la función getInRange()
+        *Criteria: States o Severities
+
+    Retorna una tupla con los siguientes valores:
+        *Llave del mayor valor del diccionario segun el criterio ingresado.
+        *Mayor valor del diccionario según el criterio ingresado.
+        *Día en el que se presentaron más accidentes en el rango.     
+        *Número total de accidentes en el rango.
+    """
+    dictionary = {}
+    cont = 1
+    
+    if acc_in_range[0] == 0 and acc_in_range[1] != None:                     #Primer caso en el que el rango de fechas se encuentra dentro del mismo año 
+        condition = 2
+    elif acc_in_range[0] == 1 and acc_in_range[1] != None:                  #Segundo caso en el que el rango de fechas abarca dos años
+        condition = 3
+       
+    while cont < condition:
+        more_accidents = 0
+        num_acc_in_range = 0
+
+        iterator = it.newIterator(acc_in_range[1])
+        while it.hasNext(iterator):
+
+            Key_Entry = it.next(iterator)           
+            day = om.get(catalog[str(Key_Entry.year)],Key_Entry)
+            day_accidents = day['value']['Accidents_lst']
+
+            iterator_acc = it.newIterator(day_accidents)
+            while it.hasNext(iterator_acc):
+                
+                acc = it.next(iterator_acc)
+                criteria_dictkey = acc[criteria]
+                if criteria_dictkey not in dictionary:
+                    dictionary[criteria_dictkey] = 1
+                else:
+                    dictionary[criteria_dictkey] = dictionary[criteria_dictkey] + 1
+
+            num_accidents_in_day =  lt.size(day_accidents) 
+            num_acc_in_range = num_acc_in_range + num_accidents_in_day          #Se calcula el total de accidentes en el rango de fechas.
+                
+            if num_accidents_in_day > more_accidents:                           #Se calcula el día en el que ocurrieron más accidentes en el rango de fechas.
+                more_accidents = num_accidents_in_day
+                more_accdicents_day = day
+
+        cont = cont + 1
+
+    max_dict_value = 0
+    dictionary_keys = dictionary.keys()
+
+    for value in dictionary_keys:                                           #Se calcula la llave del diccionario con mayor valor en el rango de fehcas.
+        num_value = dictionary[value]
+        if num_value > max_dict_value:
+            max_dict_value = num_value
+            max_value = value
+
+    return max_value , dictionary[max_value]  , more_accdicents_day ,  num_acc_in_range  
+
+def getAccidentsInRange(catalog,initial_date,final_date):  
+    """
+    RETO3 - REQ5
+    Retorna los accidentes en un rango.
+    """
+    criteria = 'Severity'
+    acc_in_range = getInRange(catalog,initial_date,final_date)
+    if acc_in_range != None:
+        accidentes_in_range_by_criteria = auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria)
+        return accidentes_in_range_by_criteria
+    return None
+def getStateWithMoreAccidents(catalog,initial_date,final_date):
     """
     RETO3 - REQ4
-    Retorna el Estado con más accidentes registrados.
+    Retorna el Estado con más accidentes registrados en un rango de fechas.
     """ 
-    states = catalog['States']
-    lst_keys = m.keySet
+    criteria = 'State'
+    acc_in_range = getInRange(catalog,initial_date,final_date)
+    if acc_in_range != None:
+        accidentes_in_range_by_criteria = auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria)
+        return accidentes_in_range_by_criteria
+    return None
 
+def getAccidentsInHourRange(catalog,initial_hour,final_hour):
+    """
+    RETO3 - REQ5
+    Retorna los accidentes dado un rango de horas.
+    """ 
+    acc_time1 = datetime.timedelta(hours=initial_hour.hour, minutes = initial_hour.minute)
+    acc_minutes1 = datetime.timedelta(minutes=initial_hour.minute)
+    fifteen_minutes = datetime.timedelta(minutes=15)
+    
+    if acc_minutes1 == 00:
+        rbt_initial_time = acc_time1
+    elif acc_minutes1 <= fifteen_minutes:
+        rbt_initial_time = datetime.timedelta(hours=initial_hour.hour, minutes = 00)
+    elif acc_minutes1 >= fifteen_minutes and acc_minutes1 <= (fifteen_minutes)*3:
+        rbt_initial_time = datetime.timedelta(hours=initial_hour.hour, minutes = 30)  
+    elif acc_minute1 > (fifteen_minutes)*3:
+        rbt_initial_time = datetime.timedelta(hours=(initial_hour.hour + 1 ), minutes = 00)
 
+    acc_time2 = datetime.timedelta(hours=final_hour.hour, minutes = final_hour.minute)
+    acc_minutes2 = datetime.timedelta(minutes=final_hour.minute)
 
+    if acc_minutes2 == 00:
+        rbt_final_hour = acc_time2
+    elif acc_minutes2 <= fifteen_minutes:
+        rbt_final_hour = datetime.timedelta(hours=final_hour.hour, minutes = 00)
+    elif acc_minutes2 >= fifteen_minutes and acc_minutes2 <= (fifteen_minutes)*3:
+        rbt_final_hour = datetime.timedelta(hours=final_hour.hour, minutes = 30)   
+    elif acc_minutes2 > (fifteen_minutes)*3:
+        rbt_final_hour = datetime.timedelta(hours=(final_hour.hour + 1 ), minutes = 00)
+
+    Hour_RBT = catalog['Hour_RBT']
+    keylow = om.get(Hour_RBT,rbt_initial_time)['key']
+    keyhigh = om.get(Hour_RBT,rbt_final_hour)['key']
+
+    if initial_hour != None and final_hour != None:
+        return om.values(Hour_RBT,keylow,keyhigh)
+    return None
+
+# ==============================
+# Funciones para consultar tamaño y altura de los árboles/mapas.
+# ==============================
 
 def yearsSize(catalog):
     """
@@ -262,6 +418,11 @@ def yearsSize(catalog):
     y4=om.size(catalog['2019'])
     
     return y1 + y2 + y3 +y4
+def hoursSize(catalog):
+    """
+    Número de HH:MM en las que ocurrieron accidentes.
+    """
+    return om.size(catalog['Hour_RBT'])
 def accidentsSize(catalog):
     """
     Número de accidentes.
@@ -279,6 +440,12 @@ def eachYearSize(catalog):
     y5=om.size(catalog['2020'])
 
     return y1 , y2 , y3 , y4 , y5
+def statesSize(catalog):
+    """
+    RETO3 - REQ4
+    Número de estados cargados.
+    """
+    return m.size(catalog['States'])
 def eachYearHeight(catalog):
     """
     Altura del árbol de cada año.
@@ -290,7 +457,11 @@ def eachYearHeight(catalog):
     y5 = y4=om.height(catalog['2020'])
 
     return y1, y2, y3, y4 , y5
-
+def hourHeight(catalog):
+    """
+    Altura del árbol de horas.
+    """
+    return om.height(catalog['Hour_RBT'])
 # ==============================
 # Funciones de Comparacion
 # ==============================
@@ -330,13 +501,14 @@ def compareSeverity(sev_accident1,sev_accident2):
     else:
         return -1
 
-def compareStatesNames(state1,state2):
+def compareHours(time1,time2):
     """
-    Compara dos nombres de Estados.
+    Compara dos horas de accidentes.
     """
-    if state1 == state2:
+    if (time1 == time2):
         return 0
-    elif state1 > state2:
+    elif (time1 > time2):
         return 1
     else:
         return -1
+    

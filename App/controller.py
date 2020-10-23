@@ -81,9 +81,7 @@ def getAccidentsBeforeDate(catalog,search_date):
     el número de accidentes ocurridos anteriores a una fecha.
     """      
     search_date = datetime.datetime.strptime(search_date, '%Y-%m-%d')
-    year_search_date = str(search_date.year)
-    year_bst = catalog[year_search_date]    
-    return model.getAccidentsBeforeDate(year_bst,search_date.date())
+    return model.getAccidentsBeforeDate(catalog,search_date.date())
 
 def getAccidentsInRange(catalog,initial_date,final_date):
     """

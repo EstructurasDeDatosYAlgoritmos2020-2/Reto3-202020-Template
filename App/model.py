@@ -230,28 +230,50 @@ def getAccidentsByDate(year_bst,search_date):
         return me.getValue(date_accidents)
     return None
 
-def getAccidentsBeforeDate(year_bst,search_date):
+def getAccidentsBeforeDate(catalog,search_date):
     """
     RETO3 - REQ2
     Retorna el número de accidentes ocurridos anteriores a una fecha.
     """       
-    date_accidents = om.get(year_bst,search_date)
     
-    if date_accidents != None:
+    year_search_date = search_date.year
+    year_bst = catalog[year_search_date]  
 
-        key_date = date_accidents['key']
-        keylow = om.minKey(year_bst)
+    if year_search_date != 2016:
+        while year_bst is not None:
+            date_accidents = om.get(year_bst,search_date)
+            if date_accidents != None:
 
-        return om.keys(year_bst,keylow,key_date)
+                key_date = date_accidents['key']
+                keylow = om.minKey(year_bst)
+
+                keys = om.keys(year_bst,keylow,key_date)
+
+                year_bst = year_search_date - 1
+
+            return 
+
+    else:
+         
+        date_accidents = om.get(year_bst,search_date)
+        if date_accidents != None:
+
+            key_date = date_accidents['key']
+            keylow = om.minKey(year_bst)
+
+            return om.keys(year_bst,keylow,key_date)
     return None
 
 def getInRange(catalog,initial_date,final_date):
     """
     Retorna una tupla con dos elementos:
-        *El primer elemento es 0 si el rango de fechas abarca un sólo año.
-        O 1 si el rango de fechas abarca dos años.
-        *El segundo elemento de la tupla son
-        las llaves del RBT de accidentes ocurridos en un rango de fechas.
+        *El primer elemento es:
+            0 si el rango de fechas abarca un sólo año.
+            1 si el rango de fechas abarca dos años.
+            2 si el rango abarca más de dos años.
+
+        *El segundo y los siguientes elementos de la tupla son
+        las llaves del RBT de accidentes ocurridos en un rango de fechas de un año.
     """ 
     initial_year = str(initial_date.year)
     final_year = str(final_date.year)  
@@ -261,19 +283,49 @@ def getInRange(catalog,initial_date,final_date):
 
     if initial_date_accidents and final_date_accidents:
         
-        if initial_year == final_year:          #Primer caso en el que el rango de fechas se encuentra dentro del mismo año
+        if initial_year == final_year:                  #Primer caso en el que el rango de fechas se encuentra dentro del mismo año
             keylow = om.get(catalog[initial_year],initial_date)['key']
             keyhigh = om.get(catalog[initial_year],final_date)['key']
     
             return 0 , om.keys(catalog[initial_year],keylow,keyhigh)
 
-        else:                                   #Segundo caso en el que el rango de fechas abarca dos años
+        elif (int(final_year) - int(initial_year)) == 1:          #Segundo caso en el que el rango de fechas abarca dos años
             keymax = om.maxKey(catalog[initial_year])
-            dates_initial_year = om.keys(catalog[initial_year],initial_date,keymax)
-
+            keylow = om.get(catalog[initial_year],initial_date)['key']
+            dates_initial_year = om.keys(catalog[initial_year],keylow,keymax)
+            
             keymin = om.minKey(catalog[final_year])
-            dates_final_year = om.keys(catalog[final_year],final_date,keymin)
+            keyhigh = om.get(catalog[final_year],final_date)['key']
+            
+            dates_final_year = om.keys(catalog[final_year],keymin,keyhigh)
             return 1 , dates_initial_year , dates_final_year
+
+        else:                                           #Tercer caso en el que el rango de fechas abarca más de dos años
+            
+            dates_fourth_year = None
+            dates_fifth_year = None
+
+            keymax = om.maxKey(catalog[initial_year])
+            keylow = om.get(catalog[initial_year],initial_date)['key']
+            dates_initial_year = om.keys(catalog[initial_year],keylow,keymax)       #Fechas primer año.
+
+            yearIterator = int(initial_date.year) + 1
+            while yearIterator < (int(final_date.year) + 1):                        #Fechas resto de años.
+                keymax = om.maxKey(catalog[str(yearIterator)])
+                keymin = om.minKey(catalog[yearIterator])
+                
+                if yearIterator == initial_year + 1:
+                    dates_second_year = om.keys(catalog[str(yearIterator)],keylow,keymax)  
+                if yearIterator == initial_year + 2:
+                    dates_third_year = om.keys(catalog[str(yearIterator)],keylow,keymax)  
+                if yearIterator == initial_year + 3:
+                    dates_fourth_year = om.keys(catalog[str(yearIterator)],keylow,keymax)  
+                if yearIterator == initial_year + 4:
+                    dates_fifth_year = om.keys(catalog[str(yearIterator)],keylow,keymax)  
+
+                yearIterator = yearIterator + 1
+
+            return 2 , dates_initial_year , dates_second_year , dates_third_year , dates_fourth_year , dates_fifth_year
 
     return None
 
@@ -297,22 +349,31 @@ def auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria)
     dictionary = {}
     cont = 1
     
-    if acc_in_range[0] == 0 and acc_in_range[1] != None:                     #Primer caso en el que el rango de fechas se encuentra dentro del mismo año 
+    if acc_in_range[0] == 0:                     #Primer caso en el que el rango de fechas se encuentra dentro del mismo año 
         condition = 2
-    elif acc_in_range[0] == 1 and acc_in_range[1] != None:                  #Segundo caso en el que el rango de fechas abarca dos años
+    elif acc_in_range[0] == 1:                   #Segundo caso en el que el rango de fechas abarca dos años
         condition = 3
-       
-    while cont < condition:
-        more_accidents = 0
-        num_acc_in_range = 0
+    elif acc_in_range[0] == 2:                   #Tercer caso en el que el rango de fechas abarca más de dos años
+        condition = 6 
 
-        iterator = it.newIterator(acc_in_range[1])
+    more_accidents = 0
+    num_acc_in_range = 0    
+
+    while cont < condition and acc_in_range[cont] is not None:
+
+        iterator = it.newIterator(acc_in_range[cont])
         while it.hasNext(iterator):
 
             Key_Entry = it.next(iterator)           
             day = om.get(catalog[str(Key_Entry.year)],Key_Entry)
             day_accidents = day['value']['Accidents_lst']
 
+            num_accidents_in_day =  lt.size(day_accidents) 
+            num_acc_in_range = num_acc_in_range + num_accidents_in_day          #Se calcula el total de accidentes en el rango de fechas.
+                
+            if num_accidents_in_day > more_accidents:                           #Se calcula el día en el que ocurrieron más accidentes en el rango de fechas.
+                more_accidents = num_accidents_in_day
+                more_accdicents_day = day
             iterator_acc = it.newIterator(day_accidents)
             while it.hasNext(iterator_acc):
                 
@@ -323,15 +384,8 @@ def auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria)
                 else:
                     dictionary[criteria_dictkey] = dictionary[criteria_dictkey] + 1
 
-            num_accidents_in_day =  lt.size(day_accidents) 
-            num_acc_in_range = num_acc_in_range + num_accidents_in_day          #Se calcula el total de accidentes en el rango de fechas.
-                
-            if num_accidents_in_day > more_accidents:                           #Se calcula el día en el que ocurrieron más accidentes en el rango de fechas.
-                more_accidents = num_accidents_in_day
-                more_accdicents_day = day
-
         cont = cont + 1
-
+        
     max_dict_value = 0
     dictionary_keys = dictionary.keys()
 
@@ -362,6 +416,7 @@ def getStateWithMoreAccidents(catalog,initial_date,final_date):
     criteria = 'State'
     acc_in_range = getInRange(catalog,initial_date,final_date)
     if acc_in_range != None:
+        print('Hola')
         accidentes_in_range_by_criteria = auxiliarPrintFunction(catalog,initial_date,final_date,acc_in_range,criteria)
         return accidentes_in_range_by_criteria
     return None

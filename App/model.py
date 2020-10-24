@@ -230,80 +230,62 @@ def getAccidentsByDate(year_bst,search_date):
         return me.getValue(date_accidents)
     return None
 
+def auxiliarYearIterator():
+    """
+    Función Axuiliar de las funciones Auxiliares.
+    """
+
 def getBeforeDate(catalog,search_date):
     """
     Función Auxiliar REQ2
-    Retorna una tupla con dos elementos:
-        El primero es:
-            0 si la fecha ingresada es 2016.
-            1 si el rango de fechas abarca dos años.
-            2 si el rango abarca más de dos años.
-    
-        Los demás elementos de la tupla son
-        las llaves del RBT del respectivo año.
+    Retorna una tupla con las llaves del RBT del respectivo año.
+
     """       
     
     year_search_date = search_date.year
     year_bst = catalog[str(year_search_date)]  
 
-    if year_search_date != 2016:                        #Primer caso en el que el año es disitnto a 2016 y se necesita reccorer más de un año.
+    date_accidents = om.get(year_bst,search_date)
+    if date_accidents != None:
         
-            date_accidents = om.get(year_bst,search_date)
-            d_two_year_before = None
-            d_three_year_before = None
-            d_four_year_before = None
+        d_one_year_before = None                                        #Se incian los valores de los años con None, en el caso en el 
+        d_two_year_before = None                                        #que el rango no abarque los años desde 2016 a 2020.
+        d_three_year_before = None
+        d_four_year_before = None
+        
+        key_date = date_accidents['key']
+        keylow = om.minKey(year_bst)
+        dates_year = om.keys(year_bst,keylow,key_date)
 
-            if date_accidents != None:
+        yearIterator = int(search_date.year) - 1                        
+        search_date = int(search_date.year)                             #Se recorren los años desde el ingresado hasta la primera fecha 
+        while yearIterator > 2015:                                      #registrada en 2016                                    
 
-                key_date = date_accidents['key']
-                keylow = om.minKey(year_bst)
-                dates_year = om.keys(year_bst,keylow,key_date)
+            keymax = om.maxKey(catalog[str(yearIterator)])
+            keymin = om.minKey(catalog[str(yearIterator)])
 
+            if yearIterator == search_date - 1:
+                d_one_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax)  
+
+            elif yearIterator == search_date - 2:
+                d_two_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax) 
+
+            elif yearIterator == search_date - 3:
+                d_three_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax) 
+
+            elif yearIterator == search_date - 4:
+                d_four_year_before = om.keys(catalog[str(yearIterator)],keylow,keymax)  
+
+            yearIterator = yearIterator - 1
                 
-                yearIterator = int(search_date.year) - 1
-                search_date = int(search_date.year)
-
-                while yearIterator > 2015:
-
-                    keymax = om.maxKey(catalog[str(yearIterator)])
-                    keymin = om.minKey(catalog[str(yearIterator)])
-
-                    if yearIterator == search_date - 1:
-                        d_one_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax)  
- 
-                    elif yearIterator == search_date - 2:
-                        d_two_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax) 
-
-                    elif yearIterator == search_date - 3:
-                        d_three_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax) 
-
-                    elif yearIterator == search_date - 4:
-                        d_four_year_before = om.keys(catalog[str(yearIterator)],keylow,keymax)  
-
-                    yearIterator = yearIterator - 1
-                
-            return 1 , dates_year , d_one_year_before , d_two_year_before , d_three_year_before , d_four_year_before
-    else:                                               #Segundo caso en el que el año ingresado es 2016.
-         
-        date_accidents = om.get(year_bst,search_date)
-        if date_accidents != None:
-
-            key_date = date_accidents['key']
-            keylow = om.minKey(year_bst)
-
-            return 0 , om.keys(year_bst,keylow,key_date)
+        return dates_year , d_one_year_before , d_two_year_before , d_three_year_before , d_four_year_before
     return None
 
 def getInRange(catalog,initial_date,final_date):
     """
     Función Auxiliar REQ3 y REQ4
-    Retorna una tupla con dos elementos:
-        *El primer elemento es:
-            0 si el rango de fechas abarca un sólo año.
-            1 si el rango de fechas abarca más de un año.
+    Retorna una tupla con las llaves del RBT de accidentes ocurridos en un rango de fechas de un año.
 
-        *El segundo y los siguientes elementos de la tupla son
-        las llaves del RBT de accidentes ocurridos en un rango de fechas de un año.
     """ 
     initial_year = str(initial_date.year)
     final_year = str(final_date.year)  
@@ -312,53 +294,47 @@ def getInRange(catalog,initial_date,final_date):
     final_date_accidents = om.contains(catalog[final_year],final_date)
 
     if initial_date_accidents and final_date_accidents:
-        
-        if initial_year == final_year:                              #Primer caso en el que el rango de fechas se encuentra dentro del mismo año
-            keylow = om.get(catalog[initial_year],initial_date)['key']
-            keyhigh = om.get(catalog[initial_year],final_date)['key']
-    
-            return 0 , om.keys(catalog[initial_year],keylow,keyhigh)
+        print('Checkpoint!')
+        dates_second_year = None                                                     
+        dates_third_year = None
+        dates_fourth_year = None
+        dates_fifth_year = None
 
-        else:                                                        #Segundo caso en el que el rango de fechas abarca más de dos años        
-            dates_third_year = None
-            dates_fourth_year = None
-            dates_fifth_year = None
-
-            keymax = om.maxKey(catalog[initial_year])
-            keylow = om.get(catalog[initial_year],initial_date)['key']
-            dates_initial_year = om.keys(catalog[initial_year],keylow,keymax)       #Fechas primer año.
+        keymax = om.maxKey(catalog[initial_year])
+        keylow = om.get(catalog[initial_year],initial_date)['key']
+        dates_initial_year = om.keys(catalog[initial_year],keylow,keymax)       #Fechas primer año.
             
-            keyhigh = om.get(catalog[final_year],final_date)['key']
+        keyhigh = om.get(catalog[final_year],final_date)['key']
 
-            initial_year = int(initial_year)
-            yearIterator = int(initial_date.year) + 1
-            while yearIterator < (int(final_date.year) + 1):   
-                                     #Fechas resto de años.
-                keymax = om.maxKey(catalog[str(yearIterator)])
-                keymin = om.minKey(catalog[str(yearIterator)])
-                if yearIterator == initial_year + 1:
-                    if yearIterator != int(final_year):
-                        dates_second_year = om.keys(catalog[str(yearIterator)],keymin,keymax)  
-                    else:
-                        dates_second_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
-                elif yearIterator == initial_year + 2:
-                    if yearIterator != int(final_year):
-                        dates_third_year = om.keys(catalog[str(yearIterator)],keymin,keymax) 
-                    else:
-                        dates_third_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
-                elif yearIterator == initial_year + 3:
-                    if yearIterator != int(final_year):
-                        dates_fourth_year = om.keys(catalog[str(yearIterator)],keymin,keymax) 
-                    else:
-                        dates_fourth_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh) 
-                elif yearIterator == initial_year + 4:
-                    if yearIterator != int(final_year):
-                        dates_fifth_year = om.keys(catalog[str(yearIterator)],keymin,keymax)  
-                    else:
-                        dates_fifth_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
-                yearIterator = yearIterator + 1
+        initial_year = int(initial_year)
+        yearIterator = int(initial_date.year) + 1
+        while yearIterator < (int(final_date.year) + 1):                    #Fechas resto de años.
+            keymax = om.maxKey(catalog[str(yearIterator)])
+            keymin = om.minKey(catalog[str(yearIterator)])
+            if yearIterator == initial_year + 1:
+                if yearIterator != int(final_year):
+                    dates_second_year = om.keys(catalog[str(yearIterator)],keymin,keymax)  
+                else:
+                    dates_second_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
+            elif yearIterator == initial_year + 2:
+                if yearIterator != int(final_year):
+                    dates_third_year = om.keys(catalog[str(yearIterator)],keymin,keymax) 
+                else:
+                    dates_third_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
+            elif yearIterator == initial_year + 3:
+                if yearIterator != int(final_year):
+                    dates_fourth_year = om.keys(catalog[str(yearIterator)],keymin,keymax) 
+                else:
+                    dates_fourth_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh) 
+            elif yearIterator == initial_year + 4:
+                if yearIterator != int(final_year):
+                    dates_fifth_year = om.keys(catalog[str(yearIterator)],keymin,keymax)  
+                else:
+                    dates_fifth_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
 
-            return 1 , dates_initial_year , dates_second_year , dates_third_year , dates_fourth_year , dates_fifth_year
+            yearIterator = yearIterator + 1
+
+        return dates_initial_year , dates_second_year , dates_third_year , dates_fourth_year , dates_fifth_year
 
     return None
 
@@ -377,14 +353,11 @@ def auxiliarPrintFunction(catalog,acc_in_range,criteria):
         *Mayor valor del diccionario según el criterio ingresado.
         *Día en el que se presentaron más accidentes en el rango.     
         *Número total de accidentes en el rango.
+
     """
     dictionary = {}
-    cont = 1
-    
-    if acc_in_range[0] == 0:                     #Primer caso en el que el rango de fechas se encuentra dentro del mismo año 
-        condition = 2
-    elif acc_in_range[0] == 1:                   #Segundo caso en el que el rango de fechas abarca más de un año.
-        condition = 6
+    cont = 0
+    condition = 5
 
     more_accidents = 0
     num_acc_in_range = 0    
@@ -434,11 +407,13 @@ def auxiliarPrintFunction(catalog,acc_in_range,criteria):
 def getAccidentsBeforeDate(catalog,search_date): 
     """
     RETO3 - REQ2
+    Usa la función auxiliar de impresión.
     Retorna los accidentes anteriores a una fecha.
     """
     criteria = None
     acc_before = getBeforeDate(catalog,search_date)
     if acc_before != None:
+        print('Checkpoint')
         accidents_before_date = auxiliarPrintFunction(catalog,acc_before,criteria)
         return accidents_before_date
     return None
@@ -446,6 +421,7 @@ def getAccidentsBeforeDate(catalog,search_date):
 def getAccidentsInRange(catalog,initial_date,final_date):  
     """
     RETO3 - REQ3
+    Usa la función auxiliar de impresión.
     Retorna los accidentes en un rango.
     """
     criteria = 'Severity'
@@ -458,6 +434,7 @@ def getAccidentsInRange(catalog,initial_date,final_date):
 def getStateWithMoreAccidents(catalog,initial_date,final_date):
     """
     RETO3 - REQ4
+    Usa la función auxiliar de impresión.
     Retorna el Estado con más accidentes registrados en un rango de fechas.
     """ 
     criteria = 'State'

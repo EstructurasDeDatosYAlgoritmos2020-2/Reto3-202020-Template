@@ -104,30 +104,14 @@ def printAccidentsByDate(accidents_by_date,search_date):
         print(accidents_by_date)
         print('No se encontraron accidentes en la fecha ingresada.')
 
-def printAccidentsBeforeDare(accidents_before,search,catalog):
+def printAccidentsBeforeDare(return_tuple,search_date):
     """
     RETO3 - REQ2
     Imprime los accidentes anteriores a una fecha.
     """
-    if accidents_before is not None:
-        num_acc_before_date = 0
-        more_accidents = 0
-    
-        iterator = it.newIterator(accidents_before)
-        while it.hasNext(iterator):
-            key_acc = it.next(iterator)
-            year_bst = str(key_acc.year)
-            day = om.get(catalog[year_bst],key_acc)
-            
-            num_accidents_in_day =  lt.size(day['value']['Accidents_lst'])
-            num_acc_before_date = num_acc_before_date + num_accidents_in_day
-
-            if num_accidents_in_day > more_accidents:
-                more_accidents = num_accidents_in_day
-                more_accidents_day = day
-    
-        print('\nAntes de la fecha ocurrieron: ' +  str(num_acc_before_date) + ' accidentes.')
-        print('El día en el que se presentaron más accidentes antes de la fecha ingresada fue: '+ str(more_accidents_day['key']) + '. Con: '+ str(lt.size(more_accidents_day['value']['Accidents_lst'])) + ' accidentes.')
+    if return_tuple is not None:
+        print('\nAntes de la fecha ocurrieron: ' +  str(return_tuple[1]) + ' accidentes.')
+        print('El día en el que se presentaron más accidentes antes de la fecha ingresada fue: '+ str(return_tuple[0]['key']) + '. Con: '+ str(lt.size(return_tuple[0]['value']['Accidents_lst'])) + ' accidentes.')
     else:
         print('La fecha ingresada no es válida.')
 
@@ -236,7 +220,7 @@ while True:
         print("\nRequerimiento No 2 del reto 3: ")
         search_date = input("\nIngrese la fecha desde donde se quieren buscar los accidentes anteriores (YYYY-MM-DD):")
         accidents_before = controller.getAccidentsBeforeDate(cont,search_date)
-        printAccidentsBeforeDare(accidents_before,search_date,cont)
+        printAccidentsBeforeDare(accidents_before,search_date)
 
     elif int(inputs[0]) == 5:
         print("\nRequerimiento No 3 del reto 3: ")

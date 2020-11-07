@@ -25,6 +25,7 @@ from DISClib.DataStructures import listiterator as it
 from DISClib.ADT import orderedmap as om
 from DISClib.DataStructures import mapentry as me
 from DISClib.ADT import map as m
+from DISClib.Algorithms.Graphs import scc
 import datetime
 assert config
 
@@ -230,112 +231,93 @@ def getAccidentsByDate(year_bst,search_date):
         return me.getValue(date_accidents)
     return None
 
-def auxiliarYearIterator():
+def auxiliarYearIterator(catalog,year_iterator,criteria,down_limit_date,up_limit_date):
     """
     Función Axuiliar de las funciones Auxiliares.
     """
+    if criteria == 0:                   #Caso único para getInRange cuando el rango no soprepasa un año. 
+        keylow = om.get(catalog[year_iterator],down_limit_date)['key']
+        keyhigh =  om.get(catalog[year_iterator],up_limit_date)['key']
+        Year_Dates = om.keys(catalog[year_iterator],keylow,keyhigh)
 
+    elif criteria == 1:                 #Caso en el que se necesita las fechas de todo el año. 
+        keyhigh = om.maxKey(catalog[year_iterator])
+        keylow = om.minKey(catalog[year_iterator])
+        Year_Dates = om.keys(catalog[year_iterator],keylow,keyhigh)
+    
+    elif criteria == 2:                 #Caso en el que dada una fecha límite superior, se busca la menor llave del árbol.
+        keylow = om.minKey(catalog[year_iterator])
+        keyhigh = om.get(catalog[year_iterator],up_limit_date)['key']
+        Year_Dates = om.keys(catalog[year_iterator],keylow,keyhigh)
+
+    elif criteria == 3:                 #Caso en el que dada una fecha límite inferior, se busca la mayor llave del árbol.
+        keyhigh = om.maxKey(catalog[year_iterator])
+        keylow = om.get(catalog[year_iterator],down_limit_date)['key']      
+        Year_Dates = om.keys(catalog[year_iterator],keylow,keyhigh)
+    return Year_Dates
+    
 def getBeforeDate(catalog,search_date):
     """
     Función Auxiliar REQ2
-    Retorna una tupla con las llaves del RBT del respectivo año.
+    Retorna una lista, cada posición tiene
+    las llaves del RBT de un año.
 
     """       
-    
     year_search_date = search_date.year
     year_bst = catalog[str(year_search_date)]  
+    year_RBT_Values_Keys_lst = []
 
     date_accidents = om.get(year_bst,search_date)
     if date_accidents != None:
         
-        d_one_year_before = None                                        #Se incian los valores de los años con None, en el caso en el 
-        d_two_year_before = None                                        #que el rango no abarque los años desde 2016 a 2020.
-        d_three_year_before = None
-        d_four_year_before = None
-        
-        key_date = date_accidents['key']
-        keylow = om.minKey(year_bst)
-        dates_year = om.keys(year_bst,keylow,key_date)
-
-        yearIterator = int(search_date.year) - 1                        
-        search_date = int(search_date.year)                             #Se recorren los años desde el ingresado hasta la primera fecha 
+        yearIterator = int(search_date.year)                            #Se recorren los años desde el ingresado hasta la primera fecha 
         while yearIterator > 2015:                                      #registrada en 2016                                    
+            
+            if yearIterator == int(year_search_date):
+                year_values = auxiliarYearIterator(catalog,str(yearIterator),2,None,search_date)                    
+            else:
+                year_values = auxiliarYearIterator(catalog,str(yearIterator),1,None,None)
+            
+            year_RBT_Values_Keys_lst.append(year_values)
+            yearIterator = yearIterator - 1    
 
-            keymax = om.maxKey(catalog[str(yearIterator)])
-            keymin = om.minKey(catalog[str(yearIterator)])
-
-            if yearIterator == search_date - 1:
-                d_one_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax)  
-
-            elif yearIterator == search_date - 2:
-                d_two_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax) 
-
-            elif yearIterator == search_date - 3:
-                d_three_year_before = om.keys(catalog[str(yearIterator)],keymin,keymax) 
-
-            elif yearIterator == search_date - 4:
-                d_four_year_before = om.keys(catalog[str(yearIterator)],keylow,keymax)  
-
-            yearIterator = yearIterator - 1
-                
-        return dates_year , d_one_year_before , d_two_year_before , d_three_year_before , d_four_year_before
+        return year_RBT_Values_Keys_lst
     return None
 
 def getInRange(catalog,initial_date,final_date):
     """
     Función Auxiliar REQ3 y REQ4
-    Retorna una tupla con las llaves del RBT de accidentes ocurridos en un rango de fechas de un año.
+    Retorna una lista en la que cada posición se encuentran
+    las llaves del RBT de accidentes ocurridos en un rango de fechas de un año.
 
     """ 
-    initial_year = str(initial_date.year)
-    final_year = str(final_date.year)  
-    
-    initial_date_accidents = om.contains(catalog[initial_year],initial_date)
-    final_date_accidents = om.contains(catalog[final_year],final_date)
+    initial_year = int(initial_date.year)
+    final_year = int(final_date.year)
+
+    initial_date_accidents = om.contains(catalog[str(initial_year)],initial_date)
+    final_date_accidents = om.contains(catalog[str(final_year)],final_date)
+
+    year_RBT_Values_Keys_lst = []
 
     if initial_date_accidents and final_date_accidents:
-        print('Checkpoint!')
-        dates_second_year = None                                                     
-        dates_third_year = None
-        dates_fourth_year = None
-        dates_fifth_year = None
 
-        keymax = om.maxKey(catalog[initial_year])
-        keylow = om.get(catalog[initial_year],initial_date)['key']
-        dates_initial_year = om.keys(catalog[initial_year],keylow,keymax)       #Fechas primer año.
-            
-        keyhigh = om.get(catalog[final_year],final_date)['key']
+        yearIterator = int(initial_date.year) 
+        while yearIterator < (int(final_date.year) + 1):                   
+                   
+            if yearIterator == initial_year and final_year == yearIterator:             
+                year_values = auxiliarYearIterator(catalog,str(yearIterator),0,initial_date,final_date)   
 
-        initial_year = int(initial_year)
-        yearIterator = int(initial_date.year) + 1
-        while yearIterator < (int(final_date.year) + 1):                    #Fechas resto de años.
-            keymax = om.maxKey(catalog[str(yearIterator)])
-            keymin = om.minKey(catalog[str(yearIterator)])
-            if yearIterator == initial_year + 1:
-                if yearIterator != int(final_year):
-                    dates_second_year = om.keys(catalog[str(yearIterator)],keymin,keymax)  
-                else:
-                    dates_second_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
-            elif yearIterator == initial_year + 2:
-                if yearIterator != int(final_year):
-                    dates_third_year = om.keys(catalog[str(yearIterator)],keymin,keymax) 
-                else:
-                    dates_third_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
-            elif yearIterator == initial_year + 3:
-                if yearIterator != int(final_year):
-                    dates_fourth_year = om.keys(catalog[str(yearIterator)],keymin,keymax) 
-                else:
-                    dates_fourth_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh) 
-            elif yearIterator == initial_year + 4:
-                if yearIterator != int(final_year):
-                    dates_fifth_year = om.keys(catalog[str(yearIterator)],keymin,keymax)  
-                else:
-                    dates_fifth_year = om.keys(catalog[str(yearIterator)],keymin,keyhigh)  
+            elif yearIterator != final_year and yearIterator == initial_year:              
+                year_values = auxiliarYearIterator(catalog,str(yearIterator),3,initial_date,None)       
+            elif yearIterator != final_year and yearIterator != initial_year:
+                year_values = auxiliarYearIterator(catalog,str(yearIterator),1,None,None)          
+            else:               
+                year_values = auxiliarYearIterator(catalog,str(yearIterator),2,None,final_date)
 
+            year_RBT_Values_Keys_lst.append(year_values)
             yearIterator = yearIterator + 1
 
-        return dates_initial_year , dates_second_year , dates_third_year , dates_fourth_year , dates_fifth_year
-
+        return year_RBT_Values_Keys_lst 
     return None
 
 def auxiliarPrintFunction(catalog,acc_in_range,criteria):
@@ -345,7 +327,7 @@ def auxiliarPrintFunction(catalog,acc_in_range,criteria):
 
     Recibe como parametros:
         *El Catálogo con todos los datos cargados.
-        *Tupla del retorno de la función getInRange()
+        *Lista del retorno de la función getInRange() o getBeforeDate()
         *Criteria: States, Severities o None
 
     Retorna una tupla con los siguientes valores:
@@ -357,12 +339,10 @@ def auxiliarPrintFunction(catalog,acc_in_range,criteria):
     """
     dictionary = {}
     cont = 0
-    condition = 5
-
     more_accidents = 0
     num_acc_in_range = 0    
 
-    while cont < condition and acc_in_range[cont] is not None:
+    while cont < len(acc_in_range) and acc_in_range[cont] is not None:
 
         iterator = it.newIterator(acc_in_range[cont])
         while it.hasNext(iterator):
@@ -413,7 +393,6 @@ def getAccidentsBeforeDate(catalog,search_date):
     criteria = None
     acc_before = getBeforeDate(catalog,search_date)
     if acc_before != None:
-        print('Checkpoint')
         accidents_before_date = auxiliarPrintFunction(catalog,acc_before,criteria)
         return accidents_before_date
     return None
